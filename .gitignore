@@ -1,0 +1,17 @@
+build/
+output/
+.DS_Store
+*.o
+*.obj
+*.ll
+*.a
+*.exe
+*.lib
+*.sublime*
+.*.swp
+.*.swo
+.vs/
+
+*.aux
+*.log
+*.out

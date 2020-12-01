@@ -1,0 +1,107 @@
+\documentclass[12pt]{article}
+
+\setlength{\parskip}{1em}
+
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{enumitem}
+\usepackage{textcomp}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue,
+  pdftitle={Projet LO21: Rapport final}
+}
+
+\usepackage{listings}
+\lstset{
+  numbers=left,
+  columns=fullflexible,
+  language=C,
+  numberstyle=\scriptsize,
+}
+
+\usepackage[linesnumbered, french]{algorithm2e}
+\SetKwInput{Data}{Donn\'ees}
+\SetKwInput{Result}{R\'esultat}
+\SetKwBlock{Begin}{D\'ebut}{Fin}
+
+\newcommand{\Assign}[2]{#1 $\; \longleftarrow \;$ #2}
+
+
+\title{Projet LO21: Rapport final}
+\author{Adrien Burgun}
+\date{Automne 2020}
+\graphicspath{{report/}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+
+  Le projet de ce semestre pour le cours de \textbf{LO21} (Algorithmique et Programmation II) porte sur un \textit{\og système expert \fg}.
+  Un système expert est constitué de 3 éléments:
+
+  \begin{description}[align=left]
+    \item [Une base de connaissance,] qui prend la forme suivante:
+    \[
+      A \wedge B \wedge ... \wedge Z \Rightarrow \Omega
+    \]
+    Où \(A, B, ...\) sont les symboles (d'arité zéro) constituant la \textit{prémisse} et \(\Omega\) est la \textit{conclusion}.
+
+    \item [Une base de faits,] qui est la liste des symboles ayant la valeur \textit{\og Vrai \fg} (qui correspond à l'état \textit{\og Certain \fg}). \\
+    Un symbole ne faisant pas partie de cette liste a par défaut la valeur \textit{\og Faux \fg} (qui correspond à l'état \textit{\og Incertain \fg}).
+
+    \item [Un moteur d'inférence,] qui, à partir de la base de connaissance et la base de faits, déduit quels autres symboles sont aussi vrais et les ajoute à la base de faits.
+  \end{description}
+
+  Nous définirons d'abords le type \textit{\og Règle \fg}, constituant la base de connaissance. \\
+  Nous définirons ensuite le type \textit{\og BC \fg} (\underline{B}ase de \underline{C}onnaissance). \\
+  Nous décrirons enfin le moteur d'inférence comme implémenté dans ce projet, avec différents exemples.
+\end{abstract}
+
+\section{Règles}
+
+Soit \textit{regle\_t} le type représentant une règle sous la forme d'une liste chaînée de symboles:
+
+% Faire un tableau?
+
+% \begin{lstlisting}
+% #define LONGUEUR_SYMBOLE 256
+
+% struct regle {
+%   char symbole[LONGUEUR_SYMBOLE];
+%   struct regle* suivant;
+% };
+
+% typedef struct regle regle_t;
+% \end{lstlisting}
+
+L'implémentation faite dans ce projet utilise des noms anglais pour les variables, fonctions et types; le type \textit{Règle} a pour équivalent C le type \textit{rule\_t}.
+% Une liste des traductions en anglais peut être trouvée à la fin de ce document.
+
+Le dernier élément d'une telle liste chaînée correspond à la conclusion de la règle, tandis que tous les autres éléments appartiennent à la prémisse.
+
+\subsection{Créer une règle vide}
+
+Nous représenterons une règle vide par un pointeur nul.
+Voici l'algorithme permettant de créer une règle vide:
+
+\begin{algorithm}[H]
+\DontPrintSemicolon
+\SetAlgoLined
+\Result{$R$: Règle}
+
+\Begin(NouvelleRegle){
+  \Assign{$R$}{NULL}
+}
+
+\caption{NouvelleRegle\label{NR}}
+\end{algorithm}
+
+\end{document}
