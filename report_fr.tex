@@ -8,6 +8,7 @@
 \usepackage{textcomp}
 \usepackage{amsfonts}
 \usepackage{graphicx}
+\usepackage[a4paper, margin=1in]{geometry}
 
 \usepackage{hyperref}
 \hypersetup{
@@ -28,9 +29,18 @@
 \usepackage[linesnumbered, french]{algorithm2e}
 \SetKwInput{Data}{Donn\'ees}
 \SetKwInput{Result}{R\'esultat}
+\SetKwInput{Vars}{Variables}
+\SetKwIF{If}{ElseIf}{Else}{Si}{alors}{Sinon si}{Sinon}{FinSi}
+\SetKwFor{While}{Tant que}{faire}{Fin TantQue}
 \SetKwBlock{Begin}{D\'ebut}{Fin}
+\DontPrintSemicolon
+\SetAlgoLined
+
+\RestyleAlgo{boxruled}
 
 \newcommand{\Assign}[2]{#1 $\; \longleftarrow \;$ #2}
+\newcommand{\Arg}[2]{\hspace{0.2em}#1\hspace{0.05em}: #2}
+\newcommand{\Child}[2]{#1 $\rightarrow$ #2}
 
 
 \title{Projet LO21: Rapport final}
@@ -52,7 +62,7 @@
     \[
       A \wedge B \wedge ... \wedge Z \Rightarrow \Omega
     \]
-    Où \(A, B, ...\) sont les symboles (d'arité zéro) constituant la \textit{prémisse} et \(\Omega\) est la \textit{conclusion}.
+    Où \(A, B, ...\) sont les symboles (d'arité zéro, aussi appelés \og propositions \fg) constituant la \textit{prémisse} et \(\Omega\) est la \textit{conclusion}.
 
     \item [Une base de faits,] qui est la liste des symboles ayant la valeur \textit{\og Vrai \fg} (qui correspond à l'état \textit{\og Certain \fg}). \\
     Un symbole ne faisant pas partie de cette liste a par défaut la valeur \textit{\og Faux \fg} (qui correspond à l'état \textit{\og Incertain \fg}).
@@ -93,15 +103,104 @@ Nous représenterons une règle vide par un pointeur nul.
 Voici l'algorithme permettant de créer une règle vide:
 
 \begin{algorithm}[H]
-\DontPrintSemicolon
-\SetAlgoLined
-\Result{$R$: Règle}
+\Vars{\Arg{$R$}{La règle vide à retourner}}
+\Result{\Arg{$R$}{Règle}}
 
-\Begin(NouvelleRegle){
+\Begin(NouvelleRègle){
   \Assign{$R$}{NULL}
 }
 
-\caption{NouvelleRegle\label{NR}}
+\caption{NouvelleRègle\label{NR}}
+\end{algorithm}
+
+\subsection{Créer un noeud d'une règle}
+
+Voici la fonction permettant de créer un noeud (ou symbole) dans une règle:
+
+\begin{algorithm}[H]
+\Vars{
+  \Arg{$R$}{Le noeud de la règle à retourner} \\
+  \Arg{$symbole$}{La valeur de $symbole$ à mettre dans le noeud} \\
+  \Arg{$suivant$}{Pointeur sur le prochain noeud de la liste}
+}
+\Result{\Arg{$R$}{Règle}}
+
+\Begin(CréerNoeud){
+  \tcp{Nous supposons que l'espace de mémoire requis pour $R$ est déjà alloué}
+
+  \Assign{(\Child{$R$}{$symbole$})}{$symbole$}
+
+  \Assign{(\Child{$R$}{$suivant$})}{$suivant$}
+}
+
+\caption{CréerNoeud\label{CN}}
+\end{algorithm}
+
+\subsection{Ajouter une proposition à la prémisse d'une règle}
+
+% Je me permets d'interrompre votre brave lecture de ce document latex pour argumenter sur la question posée dans le sujet original, qui stipule que cet ajout doit se faire en *queue*, et non pas en *tête*.
+% Voici donc des exemples d'utilisations de cette fonction et les résultats auxquels on s'attendrait (1) par rapport aux résultats qu'on obtiendra avec cette contrainte (2):
+%
+% ajout_prémisse(ø, A) -> (1) A | ø, (2) ø | A
+% ajout_prémisse(ø | A, B) -> (1) B | A; (2) A | B
+% ajout_prémisse(A & B | Ω, C) -> (1) C & A & B | Ω; (2) A & B & Ω | C
+%
+% Le problème est, à mon avis, qu'ajouter un symbole à la prémisse d'une règle ne devrait pas affecter la conclusion d'une règle, ce qui n'est pas le cas lorsque l'ajout se fait à l'endroit dédié à la conclusion de la règle.
+% Cela voudra aussi dire que la fonction pour ajouter une conclusion à une règle sera identique à celle-ci.
+
+L'ajout des propositions (symboles) à la prémisse d'une règle se fait par l'algorithme \textit{AjoutPrémisse} défini ci-dessous.
+Cet ajout se fait en queue de la liste chaînée (contrainte donnée pour ce projet).
+La liste chaînée donnée en entrée est modifiée par l'algorithme et est retournée.
+
+\begin{algorithm}[H]
+\Vars{
+  \Arg{$R$}{La règle à modifier} \\
+  \Arg{$R'$}{Une variable temporaire pour traverser la liste chaînée} \\
+  \Arg{$symbole$}{Le nom de la proposition (symbole) à insérer}
+}
+\Data{\Arg{$R$}{Règle}, \Arg{$symbole$}{Chaîne de charactères}}
+\Result{\Arg{$R$}{Règle}}
+
+\Begin(AjoutPrémisse){
+  \uIf{$R$ = NULL}{
+    \Assign{$R$}{\hyperref[CN]{CréerNoeud}($symbole$, NULL)}
+  }
+  \Else{
+    \Assign{$R'$}{R}
+
+    \tcp{Répeter jusqu'à ce qu'on atteigne le dernier élément}
+
+    \While{\Child{$R'$}{$next$} = NULL}{
+      \Assign{$R'$}{\Child{$R'$}{$next$}}
+    }
+
+    \tcp{$R'$ contient désormais le dernier élément de la liste}
+
+    \Assign{(\Child{$R'$}{suivant})}{\hyperref[CN]{CréerNoeud}($symbole$, NULL)}
+  }
+}
+
+\caption{AjoutPrémisse\label{AP}}
+\end{algorithm}
+
+\subsection{Créer la conclusion d'une règle}
+
+Créer la conclusion d'une règle revient à ajouter une proposition (symbole) à la fin de la règle.
+Pour ce faire, nous ré-utilisons l'algorithme \hyperref[AP]{AjoutPrémisse} défini plus tôt.
+
+\begin{algorithm}[H]
+\Vars{
+  \Arg{$R$}{La règle à modifier} \\
+  \Arg{$symbole$}{Le nom de la proposition (symbole) à insérer comme conclusion}
+}
+\Data{\Arg{$R$}{Règle}, \Arg{$symbole$}{Chaîne de charactères}}
+\Result{\Arg{$R$}{Règle}}
+
+\Begin(AjoutConclusion){
+  \Assign{$R$}{\hyperref[AP]{AjoutPrémisse}($R$, $symbole$)}
+}
+
+\caption{AjoutConclusion\label{AC}}
 \end{algorithm}
 
 \end{document}
