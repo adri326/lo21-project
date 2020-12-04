@@ -41,6 +41,7 @@
 \newcommand{\Assign}[2]{#1 $\; \longleftarrow \;$ #2}
 \newcommand{\Arg}[2]{\hspace{0.2em}#1\hspace{0.05em}: #2}
 \newcommand{\Child}[2]{(#1 $\rightarrow$ #2)}
+\newcommand{\Null}[0]{NULL}
 
 
 \title{Projet LO21: Rapport final}
@@ -107,7 +108,7 @@ Voici l'algorithme permettant de créer une règle vide:
 \Result{\Arg{$R$}{Règle}}
 
 \Begin({NouvelleRègle()}){
-  \Assign{$R$}{NULL}
+  \Assign{$R$}{\Null}
 }
 
 \caption{NouvelleRègle\label{NR}}
@@ -163,21 +164,21 @@ La liste chaînée donnée en entrée est modifiée par l'algorithme et est reto
 \Result{\Arg{$R$}{Règle}}
 
 \Begin({AjoutPrémisse($R$, $symbole$)}){
-  \uIf{$R$ = NULL}{
-    \Assign{$R$}{\hyperref[CN]{CréerNoeud}($symbole$, NULL)}
+  \uIf{$R$ = \Null}{
+    \Assign{$R$}{\hyperref[CN]{CréerNoeud}($symbole$, \Null)}
   }
   \Else{
     \Assign{$R'$}{R}
 
     \tcp{Répeter jusqu'à ce qu'on atteigne le dernier élément}
 
-    \While{\Child{$R'$}{$next$} = NULL}{
+    \While{\Child{$R'$}{$next$} $\neq$ \Null}{
       \Assign{$R'$}{\Child{$R'$}{$next$}}
     }
 
     \tcp{$R'$ contient désormais le dernier élément de la liste}
 
-    \Assign{\Child{$R'$}{suivant}}{\hyperref[CN]{CréerNoeud}($symbole$, NULL)}
+    \Assign{\Child{$R'$}{suivant}}{\hyperref[CN]{CréerNoeud}($symbole$, \Null)}
   }
 }
 
@@ -212,7 +213,7 @@ Les 3 cas minimaux sont:
 
 \begin{description}
   \item[$R$ = {[]}] (règle vide): retourner \og Faux \fg
-  \item[$R$ = \{symbole: "...", suivant: NULL\}] (conclusion): retourner \og Faux \fg
+  \item[$R$ = \{symbole: "...", suivant: \Null\}] (conclusion): retourner \og Faux \fg
   \item[$R$ = \{symbole: symbole\_recherché, suivant: ...\}] (symbole trouvé): retourner \og Vrai \fg
 \end{description}
 
@@ -228,11 +229,11 @@ Dans les autres cas, nous retournons de manière récursive le résultat de la m
 \Result{\Arg{\textit{résultat}}{Booléen}}
 
 \Begin({TestAppartenance($R$, $symbole$)}){
-  \uIf{$R$ = NULL}{
+  \uIf{$R$ = \Null}{
     \tcp{Règle vide}
     \Assign{\textit{résultat}}{Faux}
   }
-  \uElseIf{\Child{$R$}{$suivant$} = NULL}{
+  \uElseIf{\Child{$R$}{$suivant$} = \Null}{
     \tcp{Conclusion}
     \Assign{\textit{résultat}}{Faux}
   }
@@ -254,8 +255,8 @@ Nous supprimons une proposition de la prémisse d'une règle de manière récurs
 Les cas minimaux sont les suivants:
 
 \begin{description}
-  \item[$R$ = {[]}] (règle vide): retourner NULL
-  \item[$R$ = \{symbole: "...", suivant: NULL\}] (conclusion): retourner $R$
+  \item[$R$ = {[]}] (règle vide): retourner \Null
+  \item[$R$ = \{symbole: "...", suivant: \Null\}] (conclusion): retourner $R$
 \end{description}
 
 Dans le cas général, nous attribuons à \Child{$R$}{$suivant$} la valeur retournée par cette fonction, appelée sur \Child{$R$}{$suivant$}, et nous retournons \Child{$R$}{$suivant$} si le noeud correspond au symbole et $R$ sinon.
@@ -270,11 +271,11 @@ Dans le cas général, nous attribuons à \Child{$R$}{$suivant$} la valeur retou
 \Result{\Arg{$R'$}{Règle}}
 
 \Begin({SupprimerSymbole($R$, $symbole$)}){
-  \uIf{$R$ = NULL}{
+  \uIf{$R$ = \Null}{
     \tcp{Règle vide}
-    \Assign{$R'$}{NULL}
+    \Assign{$R'$}{\Null}
   }
-  \uElseIf{\Child{$R$}{$suivant$} = NULL}{
+  \uElseIf{\Child{$R$}{$suivant$} = \Null}{
     \tcp{Conclusion}
     \Assign{$R'$}{$R$}
   }
@@ -307,11 +308,11 @@ Voici la fonction retournant \og Vrai \fg si la prémisse d'une règle est vide 
 \Result{\Arg{\textit{résultat}}{Booléen}}
 
 \Begin({PrémisseVide($R$)}){
-  \uIf{$R$ = NULL}{
+  \uIf{$R$ = \Null}{
     \tcp{La règle est vide, donc sa prémisse est vide}
     \Assign{\textit{résultat}}{Vrai}
   }
-  \uElseIf{\Child{$R$}{$suivant$} = NULL}{
+  \uElseIf{\Child{$R$}{$suivant$} = \Null}{
     \tcp{La règle n'a qu'une conclusion, donc sa prémisse est vide}
     \Assign{\textit{résultat}}{Vrai}
   }
@@ -326,7 +327,7 @@ Voici la fonction retournant \og Vrai \fg si la prémisse d'une règle est vide 
 \subsection{Accéder à la proposition se trouvant en tête d'une prémisse}
 
 Voici la fonction retournant la valeur de la proposition se trouvant en tête d'une prémisse.
-Si la prémisse est vide, alors la fonction retourne NULL.
+Si la prémisse est vide, alors la fonction retourne \Null.
 
 \begin{algorithm}[H]
 \Vars{
@@ -338,8 +339,8 @@ Si la prémisse est vide, alors la fonction retourne NULL.
 
 \Begin({PremierSymbole($R$)}){
   \uIf{\hyperref[PV]{PrémisseVide}($R$)}{
-    \tcp{La prémisse est vide: nous retournons NULL}
-    \Assign{\textit{résultat}}{NULL}
+    \tcp{La prémisse est vide: nous retournons \Null}
+    \Assign{\textit{résultat}}{\Null}
   }
   \Else{
     \Assign{\textit{résultat}}{\Child{$R$}{$symbole$}}
@@ -347,6 +348,39 @@ Si la prémisse est vide, alors la fonction retourne NULL.
 }
 
 \caption{PremierSymbole\label{PS}}
+\end{algorithm}
+
+\subsection{Accéder à la conclusion d'une règle}
+
+La conclusion se trouvant à la fin d'une règle, nous traversons simplement la liste chaînée jusqu'au dernier élément de celle-ci.
+Si la liste est vide, alors la fonction retourne \Null.
+
+\begin{algorithm}[H]
+\Vars{
+  \Arg{$R$}{La règle à étudier} \\
+  \Arg{$R'$}{Variable temporaire pour traverses la liste chaînée} \\
+  \Arg{\textit{résultat}}{La valeur du premier symbole de la prémisse, si existant}
+}
+\Data{\Arg{$R$}{Règle}}
+\Result{\Arg{\textit{résultat}}{Chaîne de charactères}}
+
+\Begin({ConclusionRegle($R$)}){
+  \uIf{\Child{$R$}{$suivant$} = \Null}{
+    \Assign{\textit{résultat}}{\Null}
+  }
+  \Else{
+    \Assign{$R'$}{$R$}
+
+    \tcp{Avançer jusqu'à la fin de la liste}
+    \While{\Child{$R'$}{$suivant$} $\neq$ \Null}{
+      \Assign{$R'$}{\Child{$R'$}{$suivant$}}
+    }
+
+    \Assign{\textit{résultat}}{\Child{$R'$}{$symbole$}}
+  }
+}
+
+\caption{ConclusionRegle\label{CR}}
 \end{algorithm}
 
 \end{document}
