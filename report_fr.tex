@@ -41,8 +41,8 @@
 
 \newcommand{\Assign}[2]{#1 $\; \longleftarrow \;$ #2}
 \newcommand{\Arg}[2]{\hspace{0.2em}#1\hspace{0.05em}: #2}
-\newcommand{\Child}[2]{(#1 $\rightarrow$ #2)}
-% \newcommand{\Child}[2]{#2(#1)}
+% \newcommand{\Child}[2]{(#1 $\rightarrow$ #2)}
+\newcommand{\Child}[2]{#2(#1)}
 \newcommand{\Null}[0]{\textsc{null}\hspace{4pt}}
 
 \renewcommand{\arraystretch}{1.5}
@@ -99,66 +99,52 @@ Soit \textbf{Règle} le type représentant une règle sous la forme d'une liste 
 % typedef struct regle regle_t;
 % \end{lstlisting}
 
-\begin{tabular}{|p{2cm}|p{4cm}|p{7cm}|}
+\begin{tabular}{|p{3cm}|p{4cm}|p{6.5cm}|}
   \hline
   \multicolumn{3}{|c|}{\textbf{Structure 1 :} Règle\label{R}} \\
   \hline
   \textbf{Nom} & \textbf{Type} & \textbf{Description} \\
   \hline
-  $symbole$ & Chaîne de charactères & Contient le nom du symbole correspondant à ce noeud. \\
+  \textit{symbole} & Règle $\rightarrow$ Chaîne de charactères & Retourne le nom du symbole correspondant au noeud en tête de liste. \\
   \hline
-  $suivant$ & Règle & Une référence au prochain élément de la liste chaînée, \Null si l'élément est le dernier de la liste. \\
+  \textit{suivant} & Règle $\rightarrow$ Règle & Retourne une référence au prochain élément de la liste chaînée, \textit{règle\_vide} si l'élément est le dernier de la liste. \\
+  \hline
+  \textit{nouvelle\_règle} & ((Chaîne de charactères) $\times$ Règle) $\rightarrow$ Règle & Compose une nouvelle règle à partir du nom d'un symbole et une référence à la prochaine règle. \\
+  \hline
+  \textit{règle\_vide} & Règle & La règle vide. \\
+  \hline
+  \textit{mettre\_suivant} & (Règle $\times$ Règle) $\rightarrow$ Règle & Modifie une Règle pour y attacher une Règle comme règle suivante; retourne également la règle modifiée. \\
   \hline
 \end{tabular}
 
-L'implémentation faite dans ce projet utilise des noms anglais pour les variables, fonctions et types; le type \textit{Règle} a pour équivalent C le type \textit{rule\_t}.
-% Une liste des traductions en anglais peut être trouvée à la fin de ce document.
-
 Le dernier élément d'une telle liste chaînée correspond à la conclusion de la règle, tandis que tous les autres éléments appartiennent à la prémisse (contrainte du projet).
+
+Les axiomes sur ces fonctions sont:
+
+\begin{itemize}
+\item \textit{symbole}(\textit{nouvelle\_règle}(s, r)) = s
+\item \textit{suivant}(\textit{nouvelle\_règle}(s, r)) = r
+\item \Assign{A}{\textit{nouvelle\_règle}(s, r)}; \textit{mettre\_suivant}(a, r') $\; \Rightarrow$ \textit{suivant}(A) = r'
+\end{itemize}
 
 % 1.1
 \subsection{Créer une règle vide}
 
-Nous représentons une règle vide par un pointeur nul.
+Nous représentons une règle vide par \textit{règle\_vide}.
 Voici l'algorithme permettant de créer une règle vide:
 
 \begin{algorithm}[H]
 \Vars{\Arg{$R$}{La règle vide à retourner}}
 \Result{\Arg{$R$}{Règle}}
 
-\Begin({NouvelleRègle()}){
-  \Assign{$R$}{\Null}
+\Begin({RègleVide()}){
+  \Assign{$R$}{\textit{règle\_vide}}
 }
 
-\caption{NouvelleRègle\label{NR}}
+\caption{RègleVide\label{RV}}
 \end{algorithm}
 
 % 1.2
-\subsection{Créer un noeud d'une règle}
-
-Voici la fonction permettant de créer un noeud (ou symbole) dans une règle:
-
-\begin{algorithm}[H]
-\Vars{
-  \Arg{$R$}{Le noeud de la règle à retourner} \\
-  \Arg{$symbole$}{La valeur de $symbole$ à mettre dans le noeud} \\
-  \Arg{$suivant$}{Pointeur sur le prochain noeud de la liste}
-}
-\Data{\Arg{$symbole$}{Chaîne de charactères}; \Arg{$suivant$}{Règle}}
-\Result{\Arg{$R$}{Règle}}
-
-\Begin({NouveauNoeudRegle($symbole$, $suivant$)}){
-  \tcp{Nous supposons que l'espace de mémoire requis pour $R$ est déjà alloué}
-
-  \Assign{\Child{$R$}{$symbole$}}{$symbole$}
-
-  \Assign{\Child{$R$}{$suivant$}}{$suivant$}
-}
-
-\caption{NouveauNoeudRegle\label{NNR}}
-\end{algorithm}
-
-% 1.3
 \subsection{Ajouter une proposition à la prémisse d'une règle}
 
 % Je me permets d'interrompre votre brave lecture de ce document latex pour argumenter sur la question posée dans le sujet original, qui stipule que cet ajout doit se faire en *queue*, et non pas en *tête*.
@@ -179,34 +165,34 @@ La liste chaînée donnée en entrée est modifiée par l'algorithme et est reto
 \Vars{
   \Arg{$R$}{La règle à modifier} \\
   \Arg{$R'$}{Une variable temporaire pour traverser la liste chaînée} \\
-  \Arg{$symbole$}{Le nom de la proposition (symbole) à insérer}
+  \Arg{\textit{symbole}}{Le nom de la proposition (symbole) à insérer}
 }
-\Data{\Arg{$R$}{Règle}, \Arg{$symbole$}{Chaîne de charactères}}
+\Data{\Arg{$R$}{Règle}, \Arg{\textit{symbole}}{Chaîne de charactères}}
 \Result{\Arg{$R$}{Règle}}
 
-\Begin({AjoutPrémisse($R$, $symbole$)}){
-  \uIf{$R$ = \Null}{
-    \Assign{$R$}{\hyperref[NNR]{NouveauNoeudRegle}($symbole$, \Null)}
+\Begin({AjoutPrémisse($R$, \textit{symbole})}){
+  \uIf{$R$ = \textit{règle\_vide}}{
+    \Assign{$R$}{\textit{nouvelle\_règle}(\textit{symbole}, \textit{règle\_vide})}
   }
   \Else{
     \Assign{$R'$}{R}
 
     \tcp{Répeter jusqu'à ce qu'on atteigne le dernier élément}
 
-    \While{\Child{$R'$}{$next$} $\neq$ \Null}{
-      \Assign{$R'$}{\Child{$R'$}{$next$}}
+    \While{\Child{$R'$}{\textit{suivant}} $\neq$ \textit{règle\_vide}}{
+      \Assign{$R'$}{\Child{$R'$}{\textit{suivant}}}
     }
 
     \tcp{$R'$ contient désormais le dernier élément de la liste}
 
-    \Assign{\Child{$R'$}{$suivant$}}{\hyperref[NNR]{NouveauNoeudRegle}($symbole$, \Null)}
+    \textit{mettre\_suivant}($R'$, \textit{nouvelle\_règle(\textit{symbole}, \textit{règle\_vide})})
   }
 }
 
 \caption{AjoutPrémisse\label{AP}}
 \end{algorithm}
 
-% 1.4
+% 1.3
 \subsection{Créer la conclusion d'une règle}
 
 Créer la conclusion d'une règle revient à ajouter une proposition (symbole) à la fin de la règle.
@@ -215,19 +201,19 @@ Pour ce faire, nous ré-utilisons l'algorithme \hyperref[AP]{AjoutPrémisse} dé
 \begin{algorithm}[H]
 \Vars{
   \Arg{$R$}{La règle à modifier} \\
-  \Arg{$symbole$}{Le nom de la proposition (symbole) à insérer comme conclusion}
+  \Arg{\textit{symbole}}{Le nom de la proposition (symbole) à insérer comme conclusion}
 }
-\Data{\Arg{$R$}{Règle}, \Arg{$symbole$}{Chaîne de charactères}}
+\Data{\Arg{$R$}{Règle}, \Arg{\textit{symbole}}{Chaîne de charactères}}
 \Result{\Arg{$R$}{Règle}}
 
-\Begin({AjoutConclusion($R$, $symbole$)}){
-  \Assign{$R$}{\hyperref[AP]{AjoutPrémisse}($R$, $symbole$)}
+\Begin({AjoutConclusion($R$, \textit{symbole})}){
+  \Assign{$R$}{\hyperref[AP]{AjoutPrémisse}($R$, \textit{symbole})}
 }
 
 \caption{AjoutConclusion\label{AC}}
 \end{algorithm}
 
-% 1.5
+% 1.4
 \subsection{Tester si une proposition appartient à la prémisse d'une règle}
 
 Nous testons si une proposition appartient à la prémisse d'une règle en traversant celle-ci de manière récursive (contrainte du projet).
@@ -236,82 +222,80 @@ Les 3 cas minimaux sont:
 
 \begin{description}
   \item[$R$ = {[]}] (règle vide): retourner \og Faux \fg
-  \item[$R$ = \{symbole: "...", suivant: \Null\}] (conclusion): retourner \og Faux \fg
+  \item[$R$ = \{symbole: "...", suivant: \textit{règle\_vide}\}] (conclusion): retourner \og Faux \fg
   \item[$R$ = \{symbole: symbole\_recherché, suivant: ...\}] (symbole trouvé): retourner \og Vrai \fg
 \end{description}
 
-Dans les autres cas, nous retournons de manière récursive le résultat de la même fonction, appelée sur \Child{$R$}{$suivant$}.
+Dans les autres cas, nous retournons de manière récursive le résultat de la même fonction, appelée sur \Child{$R$}{\textit{suivant}}.
 
 \begin{algorithm}[H]
 \Vars{
   \Arg{$R$}{La règle à étudier} \\
-  \Arg{$symbole$}{La nom de la proposition à rechercher} \\
+  \Arg{\textit{symbole}}{La nom de la proposition à rechercher} \\
   \Arg{\textit{résultat}}{Si oui ou non la proposition à été trouvée}
 }
-\Data{\Arg{$R$}{Règle}, \Arg{$symbole$}{Chaîne de charactères}}
+\Data{\Arg{$R$}{Règle}, \Arg{\textit{symbole}}{Chaîne de charactères}}
 \Result{\Arg{\textit{résultat}}{Booléen}}
 
-\Begin({TestAppartenance($R$, $symbole$)}){
-  \uIf{$R$ = \Null}{
+\Begin({TestAppartenance($R$, \textit{symbole})}){
+  \uIf{$R$ = \textit{règle\_vide}}{
     \tcp{Règle vide}
     \Assign{\textit{résultat}}{Faux}
   }
-  \uElseIf{\Child{$R$}{$suivant$} = \Null}{
+  \uElseIf{\Child{$R$}{\textit{suivant}} = \textit{règle\_vide}}{
     \tcp{Conclusion}
     \Assign{\textit{résultat}}{Faux}
   }
-  \uElseIf{\Child{$R$}{$symbole$} = $symbole$}{
+  \uElseIf{\Child{$R$}{\textit{symbole}} = \textit{symbole}}{
     \tcp{Symbole trouvé}
     \Assign{\textit{résultat}}{Vrai}
   }
   \Else{
-    \Assign{\textit{résultat}}{TestAppartenance(\Child{$R$}{$suivant$}, $symbole$)}
+    \Assign{\textit{résultat}}{TestAppartenance(\Child{$R$}{\textit{suivant}}, \textit{symbole})}
   }
 }
 
 \caption{TestAppartenance\label{TA}}
 \end{algorithm}
 
-% 1.6
+% 1.5
 \subsection{Supprimer une proposition de la prémisse d'une règle}
 
 Nous supprimons une proposition de la prémisse d'une règle de manière récursive.
 Les cas minimaux sont les suivants:
 
 \begin{description}
-  \item[$R$ = {[]}] (règle vide): retourner \Null
-  \item[$R$ = \{symbole: "...", suivant: \Null\}] (conclusion): retourner $R$
+  \item[$R$ = {[]}] (règle vide): retourner \textit{règle\_vide}
+  \item[$R$ = \{symbole: "...", suivant: \textit{règle\_vide}\}] (conclusion): retourner $R$
 \end{description}
 
-Dans le cas général, nous attribuons à \Child{$R$}{$suivant$} la valeur retournée par cette fonction, appelée sur \Child{$R$}{$suivant$}, et nous retournons \Child{$R$}{$suivant$} si le noeud correspond au symbole et $R$ sinon.
+Dans le cas général, nous attribuons à \Child{$R$}{\textit{suivant}} la valeur retournée par cette fonction, appelée sur \Child{$R$}{\textit{suivant}}, et nous retournons \Child{$R$}{\textit{suivant}} si le noeud correspond au symbole et $R$ sinon.
 
 \begin{algorithm}[H]
 \Vars{
   \Arg{$R$}{La règle à modifier} \\
-  \Arg{$symbole$}{La nom de la proposition à rechercher} \\
-  \Arg{$R'$}{La règle privée de $symbole$ dans sa prémisse}
+  \Arg{\textit{symbole}}{La nom de la proposition à rechercher} \\
+  \Arg{$R'$}{La règle privée de \textit{symbole} dans sa prémisse}
 }
-\Data{\Arg{$R$}{Règle}, \Arg{$symbole$}{Chaîne de charactères}}
+\Data{\Arg{$R$}{Règle}, \Arg{\textit{symbole}}{Chaîne de charactères}}
 \Result{\Arg{$R'$}{Règle}}
 
-\Begin({SupprimerSymbole($R$, $symbole$)}){
-  \uIf{$R$ = \Null}{
+\Begin({SupprimerSymbole($R$, \textit{symbole})}){
+  \uIf{$R$ = \textit{règle\_vide}}{
     \tcp{Règle vide}
-    \Assign{$R'$}{\Null}
+    \Assign{$R'$}{\textit{règle\_vide}}
   }
-  \uElseIf{\Child{$R$}{$suivant$} = \Null}{
+  \uElseIf{\Child{$R$}{\textit{suivant}} = \textit{règle\_vide}}{
     \tcp{Conclusion}
     \Assign{$R'$}{$R$}
   }
   \Else{
-    \uIf{\Child{$R$}{$symbole$} = $symbole$}{
+    \uIf{\Child{$R$}{\textit{symbole}} = \textit{symbole}}{
       \tcp{Retourner le reste de la liste, sans ce noeud}
-      \Assign{$R'$}{SupprimerSymbole(\Child{$R$}{$suivant$}, $symbole$)}
+      \Assign{$R'$}{SupprimerSymbole(\Child{$R$}{\textit{suivant}}, \textit{symbole})}
     }
     \Else{
-      \Assign{\Child{$R$}{$suivant$}}{SupprimerSymbole(\Child{$R$}{$suivant$}, $symbole$)}
-
-      \Assign{$R'$}{$R$}
+      \Assign{$R'$}{\textit{mettre\_suivant}($R$, SupprimerSymbole(\Child{$R$}{\textit{suivant}}, \textit{symbole}))}
     }
   }
 }
@@ -319,7 +303,7 @@ Dans le cas général, nous attribuons à \Child{$R$}{$suivant$} la valeur retou
 \caption{SupprimerSymbole\label{SS}}
 \end{algorithm}
 
-% 1.7
+% 1.6
 \subsection{Tester si la prémisse d'une règle est vide}
 
 Voici la fonction retournant \og Vrai \fg si la prémisse d'une règle est vide et \og Faux \fg si la prémisse d'une règle contient au moins 1 symbole:
@@ -333,11 +317,11 @@ Voici la fonction retournant \og Vrai \fg si la prémisse d'une règle est vide 
 \Result{\Arg{\textit{résultat}}{Booléen}}
 
 \Begin({PrémisseVide($R$)}){
-  \uIf{$R$ = \Null}{
+  \uIf{$R$ = \textit{règle\_vide}}{
     \tcp{La règle est vide, donc sa prémisse est vide}
     \Assign{\textit{résultat}}{Vrai}
   }
-  \uElseIf{\Child{$R$}{$suivant$} = \Null}{
+  \uElseIf{\Child{$R$}{\textit{suivant}} = \textit{règle\_vide}}{
     \tcp{La règle n'a qu'une conclusion, donc sa prémisse est vide}
     \Assign{\textit{résultat}}{Vrai}
   }
@@ -349,11 +333,11 @@ Voici la fonction retournant \og Vrai \fg si la prémisse d'une règle est vide 
 \caption{PrémisseVide\label{PV}}
 \end{algorithm}
 
-% 1.8
+% 1.7
 \subsection{Accéder à la proposition se trouvant en tête d'une prémisse}
 
 Voici la fonction retournant la valeur de la proposition se trouvant en tête d'une prémisse.
-Si la prémisse est vide, alors la fonction retourne \Null.
+Si la prémisse est vide, alors la fonction retourne \textit{règle\_vide}.
 
 \begin{algorithm}[H]
 \Vars{
@@ -365,22 +349,22 @@ Si la prémisse est vide, alors la fonction retourne \Null.
 
 \Begin({PremierSymbole($R$)}){
   \uIf{\hyperref[PV]{PrémisseVide}($R$)}{
-    \tcp{La prémisse est vide: nous retournons \Null}
-    \Assign{\textit{résultat}}{\Null}
+    \tcp{La prémisse est vide: nous retournons \textit{règle\_vide}}
+    \Assign{\textit{résultat}}{\textit{règle\_vide}}
   }
   \Else{
-    \Assign{\textit{résultat}}{\Child{$R$}{$symbole$}}
+    \Assign{\textit{résultat}}{\Child{$R$}{\textit{symbole}}}
   }
 }
 
 \caption{PremierSymbole\label{PS}}
 \end{algorithm}
 
-% 1.9
+% 1.8
 \subsection{Accéder à la conclusion d'une règle}
 
 La conclusion se trouvant à la fin d'une règle, nous traversons simplement la liste chaînée jusqu'au dernier élément de celle-ci.
-Si la liste est vide, alors la fonction retourne \Null.
+Si la liste est vide, alors la fonction retourne \textit{règle\_vide}.
 
 \begin{algorithm}[H]
 \Vars{
@@ -392,18 +376,18 @@ Si la liste est vide, alors la fonction retourne \Null.
 \Result{\Arg{\textit{résultat}}{Chaîne de charactères}}
 
 \Begin({ConclusionRegle($R$)}){
-  \uIf{\Child{$R$}{$suivant$} = \Null}{
-    \Assign{\textit{résultat}}{\Null}
+  \uIf{\Child{$R$}{\textit{suivant}} = \textit{règle\_vide}}{
+    \Assign{\textit{résultat}}{\textit{règle\_vide}}
   }
   \Else{
     \Assign{$R'$}{$R$}
 
     \tcp{Avançer jusqu'à la fin de la liste}
-    \While{\Child{$R'$}{$suivant$} $\neq$ \Null}{
-      \Assign{$R'$}{\Child{$R'$}{$suivant$}}
+    \While{\Child{$R'$}{\textit{suivant}} $\neq$ \textit{règle\_vide}}{
+      \Assign{$R'$}{\Child{$R'$}{\textit{suivant}}}
     }
 
-    \Assign{\textit{résultat}}{\Child{$R'$}{$symbole$}}
+    \Assign{\textit{résultat}}{\Child{$R'$}{\textit{symbole}}}
   }
 }
 
@@ -415,61 +399,47 @@ Si la liste est vide, alors la fonction retourne \Null.
 
 Soit \textbf{BC} le type représentant une base de connaissance; celle-ci prend la forme d'une liste chaînée de Règles:
 
-\begin{tabular}{|p{2cm}|p{4cm}|p{7cm}|}
+\begin{tabular}{|p{3cm}|p{4cm}|p{6.5cm}|}
   \hline
   \multicolumn{3}{|c|}{\textbf{Structure 2 :} BC\label{BC}} \\
   \hline
   \textbf{Nom} & \textbf{Type} & \textbf{Description} \\
   \hline
-  \textit{règle} & Règle & Une référence à la règle correspondant à ce noeud. \\
+  \textit{règle} & BC $\rightarrow$ Règle & Retourne une référence à la règle correspondant à ce noeud. \\
   \hline
-  $suivant$ & BC & Une référence au prochain élément de la liste chaînée, \Null si l'élément est le dernier de la liste. \\
+  \textit{suivant} & BC $\rightarrow$ BC & Une référence au prochain élément de la liste chaînée, \Null si l'élément est le dernier de la liste. \\
+  \hline
+  \textit{nouvelle\_base} & (Règle $\cross$ BC) $\rightarrow$ BC & Crée une nouvelle base à partir d'une référence vers une Règle et d'une référence vers BC \\
+  \hline
+  \textit{base\_vide} & BC & La base vide \\
   \hline
 \end{tabular}
+
+Les axiomes sur ces fonctions sont:
+
+\begin{itemize}
+\item \textit{règle}(\textit{nouvelle\_base}(r, b)) = r
+\item \textit{suivant}(\textit{nouvelle\_base}(r, b)) = b
+\end{itemize}
 
 % 2.1
 \subsection{Créer une base vide}
 
-Nous représentons une base vide par un pointeur nul.
+Nous représentons une base vide par \textit{base\_vide}.
 Voici l'algorithme permettant de créer une base vide:
 
 \begin{algorithm}[H]
 \Vars{\Arg{$B$}{La base vide à retourner}}
 \Result{\Arg{$B$}{BC}}
 
-\Begin({NouvelleBase()}){
-  \Assign{$B$}{\Null}
+\Begin({BaseVide()}){
+  \Assign{$B$}{\textit{base\_vide}}
 }
 
-\caption{NouvelleBase\label{NB}}
+\caption{BaseVide\label{BV}}
 \end{algorithm}
 
 % 2.2
-\subsection{Créer un noeud dans une base}
-
-Voici la fonction permettant de créer un noeud d'une base de connaissance:
-
-\begin{algorithm}[H]
-\Vars{
-  \Arg{$B$}{Le noeud de la base à retourner} \\
-  \Arg{\textit{règle}}{La valeur de \textit{règle} à mettre dans le noeud} \\
-  \Arg{$suivant$}{Pointeur sur le prochain noeud de la liste}
-}
-\Data{\Arg{\textit{règle}}{Règle}; \Arg{$suivant$}{BC}}
-\Result{\Arg{$B$}{BC}}
-
-\Begin({NouveauNoeudBase(\textit{règle}, $suivant$)}){
-  \tcp{Nous supposons que l'espace de mémoire requis pour $B$ est déjà alloué}
-
-  \Assign{\Child{$B$}{\textit{règle}}}{\textit{règle}}
-
-  \Assign{\Child{$B$}{$suivant$}}{$suivant$}
-}
-
-\caption{NouveauNoeudBase\label{NNB}}
-\end{algorithm}
-
-% 2.3
 \subsection{Ajouter une règle à une base de connaissance}
 
 L'ajout de règle à la base de connaissance se fait en tête. Voici son algorithme:
@@ -483,10 +453,34 @@ L'ajout de règle à la base de connaissance se fait en tête. Voici son algorit
 \Data{\Arg{$B$}{BC}; \Arg{\textit{règle}}{Règle}}
 \Result{\Arg{$B'$}{BC}}
 \Begin({AjoutRègle($B$, \textit{règle})}){
-  \Assign{$B'$}{\hyperref[NNB]{NouveauNoeudBase}(\textit{règle}, $B$)}
+  \Assign{$B'$}{\textit{nouvelle\_base}}(\textit{règle}, $B$)}
 }
 
 \caption{AjoutRègle\label{AR}}
+\end{algorithm}
+
+% 2.3
+\subsection{Accéder à la règle se trouvant en tête de la base}
+
+L'ajout de règle à la base de connaissance se fait en tête. Voici son algorithme:
+
+\begin{algorithm}[H]
+\Vars{
+  \Arg{$B$}{La base de connaissance à modifier} \\
+  \Arg{$R$}{La règle se trouvant en tête de la base, \textit{règle\_vide} si la base est vide}
+}
+\Data{\Arg{$B$}{BC}}
+\Result{\Arg{$R$}{Règle}}
+\Begin({TêteBase($B$)}){
+  \uIf{\Child{$B$}{\textit{suivant}} = \textit{base\_vide}}{
+    \Assign{$R$}{\textit{règle\_vide}}
+  }
+  \Else{
+    \Assign{$R$}{\textit{règle}}($B$)}
+  }
+}
+
+\caption{TêteBase\label{TB}}
 \end{algorithm}
 
 \end{document}
