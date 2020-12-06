@@ -9,6 +9,7 @@
 \usepackage{amsfonts}
 \usepackage{slantsc}
 \usepackage{graphicx}
+\usepackage{amsmath}
 \usepackage[a4paper, margin=1in]{geometry}
 
 \usepackage{hyperref}
@@ -31,9 +32,11 @@
 \SetKwInput{Data}{Donn\'ees}
 \SetKwInput{Result}{R\'esultat}
 \SetKwInput{Vars}{Variables}
+\SetKwInput{Assertion}{Assertion}
 \SetKwIF{If}{ElseIf}{Else}{Si}{alors}{Sinon si}{Sinon}{FinSi}
 \SetKwFor{While}{Tant que}{faire}{Fin TantQue}
 \SetKwBlock{Begin}{D\'ebut}{Fin}
+\SetKwRepeat{Repeat}{Faire}{Tant que}
 \DontPrintSemicolon
 \SetAlgoLined
 
@@ -44,6 +47,9 @@
 % \newcommand{\Child}[2]{(#1 $\rightarrow$ #2)}
 \newcommand{\Child}[2]{#2(#1)}
 \newcommand{\Null}[0]{\textsc{null}\hspace{4pt}}
+\newcommand{\And}[2]{#1\hspace{2pt}\textnormal{\textbf{et}}\hspace{2.5pt}#2}
+\newcommand{\Not}[1]{\textnormal{\textbf{non}}(#1)}
+\newcommand{\Neither}[2]{\And{\Not{#1}}{\Not{#2}}}
 
 \renewcommand{\arraystretch}{1.5}
 
@@ -64,7 +70,7 @@
   \begin{description}[align=left]
     \item [Une base de connaissance,] qui prend la forme suivante:
     \[
-      A \wedge B \wedge ... \wedge Z \Rightarrow \Omega
+      A \land B \land ... \land Z \Rightarrow \Omega
     \]
     Où \(A, B, ...\) sont les symboles (d'arité zéro, aussi appelés \og propositions \fg) constituant la \textit{prémisse} et \(\Omega\) est la \textit{conclusion}.
 
@@ -84,7 +90,7 @@
 % 1
 \section{Règles}
 
-Soit \textbf{Règle} le type représentant une règle sous la forme d'une liste chaînée de symboles:
+Soit \textbf{Règle} le type représentant une règle sous la forme d'une liste de symboles:
 
 % Faire un tableau?
 
@@ -105,11 +111,11 @@ Soit \textbf{Règle} le type représentant une règle sous la forme d'une liste 
   \hline
   \textbf{Nom} & \textbf{Type} & \textbf{Description} \\
   \hline
-  \textit{symbole} & Règle $\rightarrow$ Chaîne de charactères & Retourne le nom du symbole correspondant au noeud en tête de liste. \\
+  \textit{symbole} & Règle $\rightarrow$ Symbole & Retourne le nom du symbole correspondant au noeud en tête de liste. \\
   \hline
-  \textit{suivant} & Règle $\rightarrow$ Règle & Retourne une référence au prochain élément de la liste chaînée, \textit{règle\_vide} si l'élément est le dernier de la liste. \\
+  \textit{suivant} & Règle $\rightarrow$ Règle & Retourne une référence au prochain élément de la liste, \textit{règle\_vide} si l'élément est le dernier de la liste. \\
   \hline
-  \textit{nouvelle\_règle} & ((Chaîne de charactères) $\times$ Règle) $\rightarrow$ Règle & Compose une nouvelle règle à partir du nom d'un symbole et une référence à la prochaine règle. \\
+  \textit{nouvelle\_règle} & ((Symbole) $\times$ Règle) $\rightarrow$ Règle & Compose une nouvelle règle à partir du nom d'un symbole et une référence à la prochaine règle. \\
   \hline
   \textit{règle\_vide} & Règle & La règle vide. \\
   \hline
@@ -117,7 +123,8 @@ Soit \textbf{Règle} le type représentant une règle sous la forme d'une liste 
   \hline
 \end{tabular}
 
-Le dernier élément d'une telle liste chaînée correspond à la conclusion de la règle, tandis que tous les autres éléments appartiennent à la prémisse (contrainte du projet).
+Le type \og Symbole \fg correspond dans l'implémentation C à une chaîne de caractères.
+Le dernier élément d'une telle liste correspond à la conclusion de la règle, tandis que tous les autres éléments appartiennent à la prémisse (contrainte du projet).
 
 Les axiomes sur ces fonctions sont:
 
@@ -126,6 +133,12 @@ Les axiomes sur ces fonctions sont:
 \item \textit{suivant}(\textit{nouvelle\_règle}(s, r)) = r
 \item \Assign{A}{\textit{nouvelle\_règle}(s, r)}; \textit{mettre\_suivant}(a, r') $\; \Rightarrow$ \textit{suivant}(A) = r'
 \end{itemize}
+
+Nous pouvons noter que:
+
+Liste $\prec$ Règle [$\emptyset$: \textit{règle\_vide}, tête: \textit{symbole}, reste: \textit{suivant}, insérer\_tête: \textit{nouvelle\_règle}, Élement: Symbole]
+
+(Un type concret implémentant Règle implémente également Liste)
 
 % 1.1
 \subsection{Créer une règle vide}
@@ -158,17 +171,20 @@ Voici l'algorithme permettant de créer une règle vide:
 % Cela voudra aussi dire que la fonction pour ajouter une conclusion à une règle sera identique à celle-ci.
 
 L'ajout des propositions (symboles) à la prémisse d'une règle se fait par l'algorithme \textit{AjoutPrémisse} défini ci-dessous.
-Cet ajout se fait en queue de la liste chaînée (contrainte du projet).
-La liste chaînée donnée en entrée est modifiée par l'algorithme et est retournée.
+Cet ajout se fait en queue de la liste (contrainte du projet).
+La liste donnée en entrée est modifiée par l'algorithme et est retournée.
 
 \begin{algorithm}[H]
 \Vars{
-  \Arg{$R$}{La règle à modifier} \\
-  \Arg{$R'$}{Une variable temporaire pour traverser la liste chaînée} \\
-  \Arg{\textit{symbole}}{Le nom de la proposition (symbole) à insérer}
+  \begin{itemize}
+    \item \Arg{$R$}{La règle à modifier}
+    \item \Arg{$R'$}{Une variable temporaire pour traverser la liste}
+    \item \Arg{\textit{symbole}}{Le nom de la proposition (symbole) à insérer}
+  \end{itemize}
 }
-\Data{\Arg{$R$}{Règle}, \Arg{\textit{symbole}}{Chaîne de charactères}}
+\Data{\Arg{$R$}{Règle}, \Arg{\textit{symbole}}{Symbole}}
 \Result{\Arg{$R$}{Règle}}
+\Assertion{$R$ n'a pas encore de conclusion}
 
 \Begin({AjoutPrémisse($R$, \textit{symbole})}){
   \uIf{$R$ = \textit{règle\_vide}}{
@@ -200,11 +216,14 @@ Pour ce faire, nous ré-utilisons l'algorithme \hyperref[AP]{AjoutPrémisse} dé
 
 \begin{algorithm}[H]
 \Vars{
-  \Arg{$R$}{La règle à modifier} \\
-  \Arg{\textit{symbole}}{Le nom de la proposition (symbole) à insérer comme conclusion}
+  \begin{itemize}
+    \item \Arg{$R$}{La règle à modifier}
+    \item \Arg{\textit{symbole}}{Le nom de la proposition (symbole) à insérer comme conclusion}
+  \end{itemize}
 }
-\Data{\Arg{$R$}{Règle}, \Arg{\textit{symbole}}{Chaîne de charactères}}
+\Data{\Arg{$R$}{Règle}, \Arg{\textit{symbole}}{Symbole}}
 \Result{\Arg{$R$}{Règle}}
+\Assertion{$R$ n'a pas encore de conclusion}
 
 \Begin({AjoutConclusion($R$, \textit{symbole})}){
   \Assign{$R$}{\hyperref[AP]{AjoutPrémisse}($R$, \textit{symbole})}
@@ -230,11 +249,13 @@ Dans les autres cas, nous retournons de manière récursive le résultat de la m
 
 \begin{algorithm}[H]
 \Vars{
-  \Arg{$R$}{La règle à étudier} \\
-  \Arg{\textit{symbole}}{La nom de la proposition à rechercher} \\
-  \Arg{\textit{résultat}}{Si oui ou non la proposition à été trouvée}
+  \begin{itemize}
+    \item \Arg{$R$}{La règle à étudier}
+    \item \Arg{\textit{symbole}}{La nom de la proposition à rechercher}
+    \item \Arg{\textit{résultat}}{Si oui ou non la proposition à été trouvée}
+  \end{itemize}
 }
-\Data{\Arg{$R$}{Règle}, \Arg{\textit{symbole}}{Chaîne de charactères}}
+\Data{\Arg{$R$}{Règle}, \Arg{\textit{symbole}}{Symbole}}
 \Result{\Arg{\textit{résultat}}{Booléen}}
 
 \Begin({TestAppartenance($R$, \textit{symbole})}){
@@ -273,11 +294,13 @@ Dans le cas général, nous attribuons à \Child{$R$}{\textit{suivant}} la valeu
 
 \begin{algorithm}[H]
 \Vars{
-  \Arg{$R$}{La règle à modifier} \\
-  \Arg{\textit{symbole}}{La nom de la proposition à rechercher} \\
-  \Arg{$R'$}{La règle privée de \textit{symbole} dans sa prémisse}
+  \begin{itemize}
+    \item \Arg{$R$}{La règle à modifier}
+    \item \Arg{\textit{symbole}}{La nom de la proposition à rechercher}
+    \item \Arg{$R'$}{La règle privée de \textit{symbole} dans sa prémisse}
+  \end{itemize}
 }
-\Data{\Arg{$R$}{Règle}, \Arg{\textit{symbole}}{Chaîne de charactères}}
+\Data{\Arg{$R$}{Règle}, \Arg{\textit{symbole}}{Symbole}}
 \Result{\Arg{$R'$}{Règle}}
 
 \Begin({SupprimerSymbole($R$, \textit{symbole})}){
@@ -310,8 +333,10 @@ Voici la fonction retournant \og Vrai \fg si la prémisse d'une règle est vide 
 
 \begin{algorithm}[H]
 \Vars{
-  \Arg{$R$}{La règle à étudier} \\
-  \Arg{\textit{résultat}}{Si oui ou non la prémisse d'une règle est vide}
+  \begin{itemize}
+    \item \Arg{$R$}{La règle à étudier}
+    \item \Arg{\textit{résultat}}{Si oui ou non la prémisse d'une règle est vide}
+  \end{itemize}
 }
 \Data{\Arg{$R$}{Règle}}
 \Result{\Arg{\textit{résultat}}{Booléen}}
@@ -341,13 +366,15 @@ Si la prémisse est vide, alors la fonction retourne \textit{règle\_vide}.
 
 \begin{algorithm}[H]
 \Vars{
-  \Arg{$R$}{La règle à étudier} \\
-  \Arg{\textit{résultat}}{La valeur du premier symbole de la prémisse, si existant}
+  \begin{itemize}
+    \item \Arg{$R$}{La règle à étudier}
+    \item \Arg{\textit{résultat}}{La valeur du premier symbole de la prémisse, si existant}
+  \end{itemize}
 }
 \Data{\Arg{$R$}{Règle}}
-\Result{\Arg{\textit{résultat}}{Chaîne de charactères}}
+\Result{\Arg{\textit{résultat}}{Symbole}}
 
-\Begin({PremierSymbole($R$)}){
+\Begin({TêteRègle($R$)}){
   \uIf{\hyperref[PV]{PrémisseVide}($R$)}{
     \tcp{La prémisse est vide: nous retournons \textit{règle\_vide}}
     \Assign{\textit{résultat}}{\textit{règle\_vide}}
@@ -357,25 +384,27 @@ Si la prémisse est vide, alors la fonction retourne \textit{règle\_vide}.
   }
 }
 
-\caption{PremierSymbole\label{PS}}
+\caption{TêteRègle\label{TR}}
 \end{algorithm}
 
 % 1.8
 \subsection{Accéder à la conclusion d'une règle}
 
-La conclusion se trouvant à la fin d'une règle, nous traversons simplement la liste chaînée jusqu'au dernier élément de celle-ci.
+La conclusion se trouvant à la fin d'une règle, nous traversons simplement la liste jusqu'au dernier élément de celle-ci.
 Si la liste est vide, alors la fonction retourne \textit{règle\_vide}.
 
 \begin{algorithm}[H]
 \Vars{
-  \Arg{$R$}{La règle à étudier} \\
-  \Arg{$R'$}{Variable temporaire pour traverses la liste chaînée} \\
-  \Arg{\textit{résultat}}{La valeur du premier symbole de la prémisse, si existant}
+  \begin{itemize}
+    \item \Arg{$R$}{La règle à étudier}
+    \item \Arg{$R'$}{Variable temporaire pour traverses la liste}
+    \item \Arg{\textit{résultat}}{La valeur du premier symbole de la prémisse, si existant}
+  \end{itemize}
 }
 \Data{\Arg{$R$}{Règle}}
-\Result{\Arg{\textit{résultat}}{Chaîne de charactères}}
+\Result{\Arg{\textit{résultat}}{Symbole}}
 
-\Begin({ConclusionRegle($R$)}){
+\Begin({ConclusionRègle($R$)}){
   \uIf{\Child{$R$}{\textit{suivant}} = \textit{règle\_vide}}{
     \Assign{\textit{résultat}}{\textit{règle\_vide}}
   }
@@ -391,13 +420,13 @@ Si la liste est vide, alors la fonction retourne \textit{règle\_vide}.
   }
 }
 
-\caption{ConclusionRegle\label{CR}}
+\caption{ConclusionRègle\label{CR}}
 \end{algorithm}
 
 % 2
 \section{Base de Connaissance}
 
-Soit \textbf{BC} le type représentant une base de connaissance; celle-ci prend la forme d'une liste chaînée de Règles:
+Soit \textbf{BC} le type représentant une base de connaissance (liste de règle); celle-ci prend la forme d'une liste de Règles:
 
 \begin{tabular}{|p{3cm}|p{4cm}|p{6.5cm}|}
   \hline
@@ -407,9 +436,9 @@ Soit \textbf{BC} le type représentant une base de connaissance; celle-ci prend 
   \hline
   \textit{règle} & BC $\rightarrow$ Règle & Retourne une référence à la règle correspondant à ce noeud. \\
   \hline
-  \textit{suivant} & BC $\rightarrow$ BC & Une référence au prochain élément de la liste chaînée, \Null si l'élément est le dernier de la liste. \\
+  \textit{suivant} & BC $\rightarrow$ BC & Une référence au prochain élément de la liste, \Null si l'élément est le dernier de la liste. \\
   \hline
-  \textit{nouvelle\_base} & (Règle $\cross$ BC) $\rightarrow$ BC & Crée une nouvelle base à partir d'une référence vers une Règle et d'une référence vers BC \\
+  \textit{nouvelle\_base} & (Règle $\times$ BC) $\rightarrow$ BC & Crée une nouvelle base à partir d'une référence vers une Règle et d'une référence vers BC \\
   \hline
   \textit{base\_vide} & BC & La base vide \\
   \hline
@@ -418,8 +447,8 @@ Soit \textbf{BC} le type représentant une base de connaissance; celle-ci prend 
 Les axiomes sur ces fonctions sont:
 
 \begin{itemize}
-\item \textit{règle}(\textit{nouvelle\_base}(r, b)) = r
-\item \textit{suivant}(\textit{nouvelle\_base}(r, b)) = b
+  \item \textit{règle}(\textit{nouvelle\_base}(r, b)) = r
+  \item \textit{suivant}(\textit{nouvelle\_base}(r, b)) = b
 \end{itemize}
 
 % 2.1
@@ -446,9 +475,11 @@ L'ajout de règle à la base de connaissance se fait en tête. Voici son algorit
 
 \begin{algorithm}[H]
 \Vars{
-  \Arg{$B$}{La base de connaissance à modifier} \\
-  \Arg{\textit{règle}}{La valeur de \textit{règle} à mettre dans le noeud} \\
-  \Arg{$B'$}{La base de connaissance contenant la nouvelle règle}
+  \begin{itemize}
+    \item \Arg{$B$}{La base de connaissance à modifier}
+    \item \Arg{\textit{règle}}{La valeur de \textit{règle} à mettre dans le noeud}
+    \item \Arg{$B'$}{La base de connaissance contenant la nouvelle règle}
+  \end{itemize}
 }
 \Data{\Arg{$B$}{BC}; \Arg{\textit{règle}}{Règle}}
 \Result{\Arg{$B'$}{BC}}
@@ -466,8 +497,10 @@ L'ajout de règle à la base de connaissance se fait en tête. Voici son algorit
 
 \begin{algorithm}[H]
 \Vars{
-  \Arg{$B$}{La base de connaissance à modifier} \\
-  \Arg{$R$}{La règle se trouvant en tête de la base, \textit{règle\_vide} si la base est vide}
+  \begin{itemize}
+    \item \Arg{$B$}{La base de connaissance à modifier}
+    \item \Arg{$R$}{La règle se trouvant en tête de la base, \textit{règle\_vide} si la base est vide}
+  \end{itemize}
 }
 \Data{\Arg{$B$}{BC}}
 \Result{\Arg{$R$}{Règle}}
@@ -481,6 +514,120 @@ L'ajout de règle à la base de connaissance se fait en tête. Voici son algorit
 }
 
 \caption{TêteBase\label{TB}}
+\end{algorithm}
+
+\section{Moteur d'inférence}
+
+Le moteur d'inférence est un algorithme permettant de déduire à partir de la liste initiale des symboles (propositions) ayant la valeur \og Vrai \fg et de la base de connaissance la liste de tous les symboles étant vrais.
+
+L'algorithme éxecute un maximum de $n$ (la longueur de la base de connaissance) passages sur les règles, celles-cis prenant la forme suivante ($p \geq 0$ symboles $S_x$ dans la prémisse et le symbole $\Omega_k$ dans la conclusion):
+
+\[BC \vdash (\bigwedge_{x=0}^{x < p} S_x) \Rightarrow \Omega_k\]
+
+\[\text{Avec: } \quad (\bigwedge_{x=0}^{x < p} S_x) = \begin{cases}
+  S_0 \land S_1 \land ... \land S_{p-1} & \text{Si } p > 0 \\
+  Vrai & \text{Si } p = 0
+\end{cases}
+\]
+
+Si $\Omega_k$ n'appartient pas encore à la liste des symboles vrais et que $\forall x \in [0, p[, S_x = Vrai$ ou $p = 0$, alors on ajoute $\Omega_k$ à la liste des symboles vrais.
+
+\begin{algorithm}
+\Vars{
+  \begin{itemize}
+    \item \Arg{$B$}{La base de connaissance}
+    \item \Arg{$B'$}{Variable temporaire pour traverser la base de connaissance}
+    \item \Arg{$S$}{La liste des symboles initialements vrais}
+    \item \Arg{$S'$}{La liste des symboles initialement vrais ainsi que ceux déduits des règles d'induction}
+    \item \Arg{\textit{ajouté}}{Si oui ou non un symbole à été rajouté à $S'$ dans le dernier passage}
+  \end{itemize}
+}
+\Data{\Arg{$B$}{BC}; \Arg{$S$}{Liste(Symbole)}}
+\Result{\Arg{$S'$}{Liste(Symbole)}}
+\Assertion{$\forall R \in B, R \neq$ \textit{règle\_vide}}
+\Begin({MoteurInférence($B$, $S$)}){
+  \Assign{$S'$}{$S$}
+
+  \tcp{\underline{Boucle principale}: Répétée jusqu'à ce qu'il n'y aie plus de modification à $S'$ possibles}
+  \Repeat{\textit{ajouté}}{
+    \Assign{\textit{ajouté}}{Faux} \\
+    \Assign{$B'$}{$B$}
+
+    \tcp{Pour toutes les règles de la base de connaissance...}
+    \While{$B' \neq$ \textit{base\_vide}}{
+      \tcp{Si la prémisse n'est pas vide et la conclusion n'appartient pas à $S'$...}
+      \If{\Not{\hyperref[LC]{ListeContient}($S'$, \hyperref[CR]{ConclusionRègle}(\hyperref[TB]{TêteBase}($B'$)))}}{
+        \tcp{Si la prémisse est vraie, alors on ajoute la conclusion à $S'$}
+        \If{\hyperref[PVr]{PrémisseVraie}(\hyperref[TB]{TêteBase}($B'$), $S'$)}{
+          \Assign{$S'$}{\textit{insérer\_tête}($S'$, \hyperref[CR]{ConclusionRègle}(\hyperref[TB]{TêteBase}($B'$)))} \\
+          \Assign{\textit{ajouté}}{Vrai}
+        }
+      }
+      \Assign{$B'$}{\textit{suivant}($B'$)}
+    }
+  }
+}
+
+\caption{MoteurInférence\label{MI}}
+\end{algorithm}
+
+\begin{algorithm}
+\Vars{
+  \begin{itemize}
+    \item \Arg{$T$}{Un type d'objets comparables}
+    \item \Arg{$L$}{Une liste d'objets de type $T$}
+    \item \Arg{$E$}{La valeur à trouver dans $L$}
+    \item \Arg{\textit{résultat}}{Si oui ou non $E$ est trouvé dans $L$}
+  \end{itemize}
+}
+\Data{\Arg{$L$}{Liste($T$)}; \Arg{$E$}{$T$}}
+\Result{\Arg{\textit{résultat}}{Booléen}}
+\Begin({ListeContient($L$, $E$)}){
+  \uIf{\textit{est\_vide}($L$)}{
+    \Assign{\textit{résultat}}{Faux}
+  }
+  \uElseIf{\textit{tête}($L$) = $E$}{
+    \Assign{\textit{résultat}}{Vrai}
+  }
+  \Else{
+    \Assign{\textit{résultat}}{ListeContient(\textit{reste}($L$), $E$)}
+  }
+}
+
+\caption{ListeContient\label{LC}}
+\end{algorithm}
+
+
+\begin{algorithm}
+\Vars{
+  \begin{itemize}
+  \item \Arg{$S$}{La liste de symboles vrais}
+  \item \Arg{$R$}{La règle à vérifier}
+  \item \Arg{$R'$}{Variable utilisée pour traverser $R$}
+  \item \Arg{\textit{résultat}}{Si oui ou non la prémisse de la règle est vraie}
+  \end{itemize}
+}
+\Data{\Arg{$R$}{Règle}; \Arg{$S$}{Liste(Symbole)}}
+\Result{\Arg{\textit{résultat}}{Booléen}}
+\Assertion{$R \neq$ \textit{règle\_vide}}
+
+\Begin({PrémisseVraie($R$, $S$)}){
+  \Assign{\textit{résultat}}{Vrai}
+
+  \If{\Not{\hyperref[PV]{PrémisseVide}($R$)}}{
+    \Assign{$R'$}{$R$}
+
+    \While{\textit{suivant}($R'$) $\neq$ \textit{règle\_vide}}{
+      \If{\Not{\hyperref[LC]{ListeContient}($S$, \hyperref[TR]{TêteRègle}($R'$))}}{
+        \Assign{\textit{résultat}}{Faux}
+      }
+
+      \Assign{$R'$}{\textit{suivant}($R'$)}
+    }
+  }
+}
+
+\caption{PrémisseVraie\label{PVr}}
 \end{algorithm}
 
 \end{document}
