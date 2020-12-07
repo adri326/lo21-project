@@ -257,6 +257,7 @@ Dans les autres cas, nous retournons de manière récursive le résultat de la m
 }
 \Data{\Arg{$R$}{Règle}, \Arg{\textit{symbole}}{Symbole}}
 \Result{\Arg{\textit{résultat}}{Booléen}}
+\Assertion{$R$ a une conclusion}
 
 \Begin({TestAppartenance($R$, \textit{symbole})}){
   \uIf{$R$ = \textit{règle\_vide}}{
@@ -302,6 +303,7 @@ Dans le cas général, nous attribuons à \Child{$R$}{\textit{suivant}} la valeu
 }
 \Data{\Arg{$R$}{Règle}, \Arg{\textit{symbole}}{Symbole}}
 \Result{\Arg{$R'$}{Règle}}
+\Assertion{$R$ a une conclusion}
 
 \Begin({SupprimerSymbole($R$, \textit{symbole})}){
   \uIf{$R$ = \textit{règle\_vide}}{
@@ -340,6 +342,7 @@ Voici la fonction retournant \og Vrai \fg si la prémisse d'une règle est vide 
 }
 \Data{\Arg{$R$}{Règle}}
 \Result{\Arg{\textit{résultat}}{Booléen}}
+\Assertion{$R$ a une conclusion ou $R$ est vide}
 
 \Begin({PrémisseVide($R$)}){
   \uIf{$R$ = \textit{règle\_vide}}{
@@ -373,6 +376,7 @@ Si la prémisse est vide, alors la fonction retourne \textit{règle\_vide}.
 }
 \Data{\Arg{$R$}{Règle}}
 \Result{\Arg{\textit{résultat}}{Symbole}}
+\Addertion{$R$ a une conclusion}
 
 \Begin({TêteRègle($R$)}){
   \uIf{\hyperref[PV]{PrémisseVide}($R$)}{
@@ -403,6 +407,7 @@ Si la liste est vide, alors la fonction retourne \textit{règle\_vide}.
 }
 \Data{\Arg{$R$}{Règle}}
 \Result{\Arg{\textit{résultat}}{Symbole}}
+\Assertion{$R$ a une conclusion}
 
 \Begin({ConclusionRègle($R$)}){
   \uIf{\Child{$R$}{\textit{suivant}} = \textit{règle\_vide}}{
