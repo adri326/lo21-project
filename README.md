@@ -32,3 +32,6 @@ To enable such rewrite, call `cmake` with the following argument:
 ```sh
 cmake -DFAITHFUL_IMPLEMENTATION:BOOL=OFF ..
 ```
+
+You can also disable colors by passing the `-DNO_COLOR:BOOL=ON` argument. That argument is automatically set to true on windows.
+You might also need to run the command `chcp 65001` on the windows DOS-like prompt before running this application to enable unicode support.

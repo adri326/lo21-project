@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "rule.h"
+#include "colors.h"
 
 void free_rule(rule_t* rule) {
     if (rule != NULL) {
@@ -146,10 +147,10 @@ void print_rule(const rule_t* rule) {
     if (rule->next == NULL) printf("%s\n", rule->symbol);
     bool first = true;
     while (rule != NULL) {
-        if (rule->next == NULL) printf("=> %s\n", rule->symbol);
+        if (rule->next == NULL) printf(CYAN("=>") " %s\n", rule->symbol);
         else {
             if (first) printf("%s ", rule->symbol);
-            else printf("& %s ", rule->symbol);
+            else printf(CYAN("&") " %s ", rule->symbol);
             first = false;
         }
         rule = rule->next;

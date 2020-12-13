@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include "knowledge.h"
+#include "colors.h"
 
 void free_kb(knowledgebase_t* base) {
     if (base != NULL) {
@@ -37,12 +38,12 @@ rule_t* kb_head(knowledgebase_t* base) {
 }
 
 void print_kb(const knowledgebase_t* base) {
-    printf("\u250f\u2509 Knowledge Base:\n");
-    printf("\u2503\n");
+    printf(GRAY("\u250f\u2509") BLUE(" Knowledge Base:\n"));
+    printf(GRAY("\u2503\n"));
     while (base != NULL) {
-        printf("\u2520 ");
+        printf(GRAY("\u2520 "));
         print_rule(base->rule);
         base = base->next;
     }
-    printf("\u2579\n");
+    printf(GRAY("\u2579\n"));
 }

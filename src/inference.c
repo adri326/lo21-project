@@ -2,6 +2,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
+#include "colors.h"
 #include "inference.h"
 
 bool symbols_contain(const symbols_t* hay, const char* needle) {
@@ -63,8 +64,8 @@ symbols_t* inference_engine(knowledgebase_t* base, const symbols_t* input_symbol
 }
 
 void print_symbols(const char* header, const symbols_t* symbols) {
-    printf("\u250f\u2509 %s:\n", header);
-    printf("\u2517 ");
+    printf(GRAY("\u250f\u2509") BLUE(" %s:\n"), header);
+    printf(GRAY("\u2517 "));
     while (symbols != NULL) {
         printf("%s ", symbols->symbol);
         symbols = symbols->next;
