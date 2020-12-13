@@ -11,10 +11,12 @@ endif()
 set(SRC_FILES
     src/main.c
     src/rule.c
+    src/knowledge.c
 )
 
 set(HEADER_FILES
     src/rule.h
+    src/knowledge.h
 )
 
 add_executable(lo21-project ${SRC_FILES} ${HEADER_FILES})

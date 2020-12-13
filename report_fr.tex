@@ -47,9 +47,9 @@
 % \newcommand{\Child}[2]{(#1 $\rightarrow$ #2)}
 \newcommand{\Child}[2]{#2(#1)}
 \newcommand{\Null}[0]{\textsc{null}\hspace{4pt}}
-\newcommand{\And}[2]{#1\hspace{2pt}\textnormal{\textbf{et}}\hspace{2.5pt}#2}
+% \newcommand{\Et}[2]{#1\hspace{2pt}\textnormal{\textbf{et}}\hspace{2.5pt}#2}
 \newcommand{\Not}[1]{\textnormal{\textbf{non}}(#1)}
-\newcommand{\Neither}[2]{\And{\Not{#1}}{\Not{#2}}}
+% \newcommand{\Neither}[2]{\Et{\Not{#1}}{\Not{#2}}}
 
 \renewcommand{\arraystretch}{1.5}
 
@@ -376,7 +376,7 @@ Si la prémisse est vide, alors la fonction retourne \textit{règle\_vide}.
 }
 \Data{\Arg{$R$}{Règle}}
 \Result{\Arg{\textit{résultat}}{Symbole}}
-\Addertion{$R$ a une conclusion}
+\Assertion{$R$ a une conclusion}
 
 \Begin({TêteRègle($R$)}){
   \uIf{\hyperref[PV]{PrémisseVide}($R$)}{
@@ -489,7 +489,7 @@ L'ajout de règle à la base de connaissance se fait en tête. Voici son algorit
 \Data{\Arg{$B$}{BC}; \Arg{\textit{règle}}{Règle}}
 \Result{\Arg{$B'$}{BC}}
 \Begin({AjoutRègle($B$, \textit{règle})}){
-  \Assign{$B'$}{\textit{nouvelle\_base}}(\textit{règle}, $B$)}
+  \Assign{$B'$}{\textit{nouvelle\_base}(\textit{règle}, $B$)}
 }
 
 \caption{AjoutRègle\label{AR}}
@@ -498,7 +498,7 @@ L'ajout de règle à la base de connaissance se fait en tête. Voici son algorit
 % 2.3
 \subsection{Accéder à la règle se trouvant en tête de la base}
 
-L'ajout de règle à la base de connaissance se fait en tête. Voici son algorithme:
+Voici l'algorithme permettant d'accéder à la règle se trouvant en tête:
 
 \begin{algorithm}[H]
 \Vars{
@@ -510,11 +510,11 @@ L'ajout de règle à la base de connaissance se fait en tête. Voici son algorit
 \Data{\Arg{$B$}{BC}}
 \Result{\Arg{$R$}{Règle}}
 \Begin({TêteBase($B$)}){
-  \uIf{\Child{$B$}{\textit{suivant}} = \textit{base\_vide}}{
+  \uIf{$B$ = \textit{base\_vide}}{
     \Assign{$R$}{\textit{règle\_vide}}
   }
   \Else{
-    \Assign{$R$}{\textit{règle}}($B$)}
+    \Assign{$R$}{\textit{règle}($B$)}
   }
 }
 
