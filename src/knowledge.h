@@ -26,4 +26,7 @@ knowledgebase_t* push_rule(knowledgebase_t* base, rule_t* rule);
 /// [2.3] Get the rule at the head of the list
 rule_t* kb_head(knowledgebase_t* base);
 
+/// Prints out a visual representation of a knowledgebase
+void print_kb(const knowledgebase_t* base);
+
 #endif // KNOWLEDGE_H

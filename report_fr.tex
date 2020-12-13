@@ -47,7 +47,7 @@
 % \newcommand{\Child}[2]{(#1 $\rightarrow$ #2)}
 \newcommand{\Child}[2]{#2(#1)}
 \newcommand{\Null}[0]{\textsc{null}\hspace{4pt}}
-% \newcommand{\Et}[2]{#1\hspace{2pt}\textnormal{\textbf{et}}\hspace{2.5pt}#2}
+\newcommand{\Et}[2]{#1\hspace{2pt}\textnormal{\textbf{et}}\hspace{2.5pt}#2}
 \newcommand{\Not}[1]{\textnormal{\textbf{non}}(#1)}
 % \newcommand{\Neither}[2]{\Et{\Not{#1}}{\Not{#2}}}
 
@@ -138,7 +138,7 @@ Nous pouvons noter que:
 
 Liste $\prec$ Règle [$\emptyset$: \textit{règle\_vide}, tête: \textit{symbole}, reste: \textit{suivant}, insérer\_tête: \textit{nouvelle\_règle}, Élement: Symbole]
 
-(Un type concret implémentant Règle implémente également Liste)
+(Un type concret implémentant Règle implémente également Liste(Symbole))
 
 % 1.1
 \subsection{Créer une règle vide}
@@ -560,7 +560,7 @@ Si $\Omega_k$ n'appartient pas encore à la liste des symboles vrais et que $\fo
 
     \tcp{Pour toutes les règles de la base de connaissance...}
     \While{$B' \neq$ \textit{base\_vide}}{
-      \tcp{Si la prémisse n'est pas vide et la conclusion n'appartient pas à $S'$...}
+      \tcp{Si la conclusion n'appartient pas à $S'$...}
       \If{\Not{\hyperref[LC]{ListeContient}($S'$, \hyperref[CR]{ConclusionRègle}(\hyperref[TB]{TêteBase}($B'$)))}}{
         \tcp{Si la prémisse est vraie, alors on ajoute la conclusion à $S'$}
         \If{\hyperref[PVr]{PrémisseVraie}(\hyperref[TB]{TêteBase}($B'$), $S'$)}{
@@ -622,7 +622,7 @@ Si $\Omega_k$ n'appartient pas encore à la liste des symboles vrais et que $\fo
   \If{\Not{\hyperref[PV]{PrémisseVide}($R$)}}{
     \Assign{$R'$}{$R$}
 
-    \While{\textit{suivant}($R'$) $\neq$ \textit{règle\_vide}}{
+    \While{\Et{\textit{suivant}($R'$) $\neq$ \textit{règle\_vide}}{\textit{résultat}}}{
       \If{\Not{\hyperref[LC]{ListeContient}($S$, \hyperref[TR]{TêteRègle}($R'$))}}{
         \Assign{\textit{résultat}}{Faux}
       }

@@ -16,7 +16,10 @@ typedef struct rule rule_t;
 /** Frees a rule and its symbol array (if it isn't a slice). Slices' borrowed memory will be unusable after that call. **/
 void free_rule(rule_t* rule);
 
-/** [1.1] Returns an empty rule, with a capacity of 1. **/
+/** Creates a new rule from the next element and a symbol **/
+rule_t* new_rule(const char* symbol, rule_t* next);
+
+/** [1.1] Returns an empty rule. **/
 rule_t* empty_rule();
 
 /** [1.2] Adds a symbol to the condition of a rule. **/
@@ -39,5 +42,8 @@ char* rule_condition_head(rule_t* rule);
 
 /** [1.8] Returns the conclusion symbol of a rule. **/
 char* rule_conclusion(rule_t* rule);
+
+/** Prints out a rule **/
+void print_rule(const rule_t* rule);
 
 #endif // RULE_H

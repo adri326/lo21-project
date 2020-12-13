@@ -25,10 +25,10 @@ The report (written in french) of this project can be found in `.tex` format at 
 
 ## Notes on extensions
 
-<!-- By default, this project builds as a faithful implementation of what is described in the report.
+By default, this project builds as a faithful implementation of what is described in the report.
 Some functions, however, can be rewritten in a more optimized way in C.
 To enable such rewrite, call `cmake` with the following argument:
 
 ```sh
 cmake -DFAITHFUL_IMPLEMENTATION:BOOL=OFF ..
-``` -->
+```

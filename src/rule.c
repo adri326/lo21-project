@@ -1,16 +1,19 @@
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 #include "rule.h"
 
 void free_rule(rule_t* rule) {
-    if (rule->next != NULL) free_rule(rule->next);
-    free(rule);
+    if (rule != NULL) {
+        free_rule(rule->next);
+        free(rule);
+    }
 }
 
-rule_t* new_rule(char* symbol, rule_t* next) {
+rule_t* new_rule(const char* symbol, rule_t* next) {
     assert(strlen(symbol) < SYMBOL_LEN);
     rule_t* res = calloc(SYMBOL_LEN, sizeof(char));
-    assert(!strcpy(res->symbol, symbol));
+    assert(!!strcpy(res->symbol, symbol));
     res->next = next;
     return res;
 }
@@ -20,27 +23,54 @@ rule_t* empty_rule() {
     return NULL;
 }
 
-// 1.2
-rule_t* push_symbol(rule_t* rule, char* symbol) {
-    if (rule == NULL) {
-        return new_rule(symbol, NULL);
-    } else {
-        // Get to the last element
-        rule_t* tmp_rule = rule;
-        while (tmp_rule->next != NULL) {
-            tmp_rule = tmp_rule->next;
+#ifdef FAITHFUL_IMPLEMENTATION // Faithful implementation of push_symbol, slower
+
+    // 1.2
+    rule_t* push_symbol(rule_t* rule, char* symbol) {
+        if (rule == NULL) {
+            return new_rule(symbol, NULL);
+        } else {
+            // Get to the last element
+            rule_t* tmp_rule = rule;
+            while (tmp_rule->next != NULL) {
+                tmp_rule = tmp_rule->next;
+            }
+
+            tmp_rule->next = new_rule(symbol, NULL);
+
+            return rule;
         }
-
-        tmp_rule->next = new_rule(symbol, NULL);
-
-        return rule;
     }
-}
 
-// 1.3
-rule_t* push_symbol_conclusion(rule_t* rule, char* symbol) {
-    return push_symbol(rule, symbol);
-}
+    // 1.3
+    rule_t* push_symbol_conclusion(rule_t* rule, char* symbol) {
+        return push_symbol(rule, symbol);
+    }
+
+#else // Faster implementation of push_symbol, albeit unfaithful to the description given in the report
+
+    rule_t* push_symbol(rule_t* rule, char* symbol) {
+        return new_rule(symbol, rule);
+    }
+
+    rule_t* push_symbol_conclusion(rule_t* rule, char* symbol) {
+        if (rule == NULL) {
+            return new_rule(symbol, NULL);
+        } else {
+            // Get to the last element
+            rule_t* tmp_rule = rule;
+            while (tmp_rule->next != NULL) {
+                tmp_rule = tmp_rule->next;
+            }
+
+            tmp_rule->next = new_rule(symbol, NULL);
+
+            return rule;
+        }
+    }
+
+#endif
+
 
 // 1.4
 bool is_symbol_in_condition(rule_t* rule, char* symbol) {
@@ -105,5 +135,23 @@ char* rule_conclusion(rule_t* rule) {
         // Go to the last symbol in the list
         while (tmp_rule->next != NULL) tmp_rule = tmp_rule->next;
         return tmp_rule->symbol;
+    }
+}
+
+void print_rule(const rule_t* rule) {
+    if (rule == NULL) {
+        printf("\n");
+        return;
+    }
+    if (rule->next == NULL) printf("%s\n", rule->symbol);
+    bool first = true;
+    while (rule != NULL) {
+        if (rule->next == NULL) printf("=> %s\n", rule->symbol);
+        else {
+            if (first) printf("%s ", rule->symbol);
+            else printf("& %s ", rule->symbol);
+            first = false;
+        }
+        rule = rule->next;
     }
 }
