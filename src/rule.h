@@ -46,4 +46,6 @@ char* rule_conclusion(rule_t* rule);
 /** Prints out a rule **/
 void print_rule(const rule_t* rule);
 
+#define free_symbols free_rule
+
 #endif // RULE_H

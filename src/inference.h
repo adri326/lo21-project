@@ -19,4 +19,8 @@ symbols_t* inference_engine(knowledgebase_t* base, const symbols_t* input_symbol
 /// Prints out a list of symbols
 void print_symbols(const char* header, const symbols_t* symbols);
 
+/// Prints out a list of symbols, diffing them with diff_symbols and highlighting the ones that are in symbols but not in diff_symbols
+void print_symbols_diff(const char* header, const symbols_t* symbols, const symbols_t* diff_symbols);
+
+
 #endif // INFERENCE_H

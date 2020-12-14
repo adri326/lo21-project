@@ -72,3 +72,27 @@ void print_symbols(const char* header, const symbols_t* symbols) {
     }
     printf("\n");
 }
+
+// Returns `elem ∈ set`
+bool symbol_in(const char* elem, const symbols_t* set) {
+    while (set != NULL) {
+        if (strcmp(set->symbol, elem) == 0) return true;
+        set = set->next;
+    }
+
+    return false;
+}
+
+void print_symbols_diff(const char* header, const symbols_t* symbols, const symbols_t* diff_symbols) {
+    printf(GRAY("\u250f\u2509") BLUE(" %s:\n"), header);
+    printf(GRAY("\u2517 "));
+    while (symbols != NULL) {
+        if (symbol_in(symbols->symbol, diff_symbols)) {
+            printf("%s ", symbols->symbol);
+        } else {
+            printf(GREEN("%s "), symbols->symbol);
+        }
+        symbols = symbols->next;
+    }
+    printf("\n");
+}
