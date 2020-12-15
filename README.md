@@ -35,3 +35,7 @@ cmake -DFAITHFUL_IMPLEMENTATION:BOOL=OFF ..
 
 You can also disable colors by passing the `-DNO_COLOR:BOOL=ON` argument. That argument is automatically set to true on windows.
 You might also need to run the command `chcp 65001` on the windows DOS-like prompt before running this application to enable unicode support.
+
+## Included tests
+
+Sample datasets are included with this project and their source code can be found in `src/test.c`.

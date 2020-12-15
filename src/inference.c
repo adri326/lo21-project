@@ -66,6 +66,9 @@ symbols_t* inference_engine(knowledgebase_t* base, const symbols_t* input_symbol
 void print_symbols(const char* header, const symbols_t* symbols) {
     printf(GRAY("\u250f\u2509") BLUE(" %s:\n"), header);
     printf(GRAY("\u2517 "));
+    if (symbols == NULL) {
+        printf(CYAN("<none>"));
+    }
     while (symbols != NULL) {
         printf("%s ", symbols->symbol);
         symbols = symbols->next;
@@ -86,6 +89,9 @@ bool symbol_in(const char* elem, const symbols_t* set) {
 void print_symbols_diff(const char* header, const symbols_t* symbols, const symbols_t* diff_symbols) {
     printf(GRAY("\u250f\u2509") BLUE(" %s:\n"), header);
     printf(GRAY("\u2517 "));
+    if (symbols == NULL) {
+        printf(CYAN("<none>"));
+    }
     while (symbols != NULL) {
         if (symbol_in(symbols->symbol, diff_symbols)) {
             printf("%s ", symbols->symbol);
