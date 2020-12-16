@@ -1,0 +1,3 @@
+[submodule "ext/lists"]
+	path = ext/lists
+	url = https://github.com/adri326/lists.c
