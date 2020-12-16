@@ -1,0 +1,112 @@
+(*
+# Grammar for the included language
+
+Following is the grammar for the language included as part of an extension of the base project in [EBNF](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form) format.
+*)
+
+(*
+## Useful constants:
+*)
+
+lowercase_letter = "a" | "b" | ... | "z";
+uppercase_letter = "A" | "B" | ... | "Z";
+space = ? white_space characters ? | "\n";
+all_characters = ? all characters ?;
+underscore = "_";
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+
+begin_paren = "(";
+end_paren = ")";
+begin_string = '"';
+end_string = '"';
+begin_comment = "{";
+end_comment = "}";
+
+(*
+## Symbols
+*)
+
+not_symbol = "!";
+and_symbol = "&&";
+or_symbol = "||";
+thus_symbol = "=>";
+terminal_symbol = ";";
+
+(*
+## Identifier
+*)
+
+identifier_symbol = lowercase_letter | uppercase_letter | digit | underscore;
+identifier = begin_string, identifier_symbol, {identifier_symbol}, end_string;
+error = "error";
+
+(*
+## Expression
+
+### Condition symbols
+*)
+
+(* !(expr) *)
+not_expression = not_symbol, {space}, sub_expression_paren;
+
+(* (expr) && (expr) *)
+and_expression = sub_expression_paren, {{space}, and_symbol, {space}, sub_expression_paren};
+
+(* (expr) || (expr) *)
+or_expression = sub_expression_paren, {{space}, or_symbol, {space}, sub_expression_paren};
+
+(* expr *)
+sub_expression = identifier | and_expression | or_expression | not_expression;
+
+(* (expr) *)
+sub_expression_paren = identifier | not_expression | (begin_paren, {space}, sub_expression, {space}, end_paren);
+
+(* ∅ *)
+no_expression = underscore;
+
+(*
+### Conclusion symbols
+*)
+
+ccl_identifier = (identifier | (not_symbol, identifier));
+ccl_expression = {space}, ccl_identifier, {space}, {and_symbol, {space}, ccl_identifier, {space}};
+
+expression = (no_expression | sub_expression), {space}, thus_symbol, {space}, (ccl_expression | error), {space} terminal_symbol;
+
+(*
+### Comments
+*)
+
+comment = begin_comment, {all_characters - end_comment}, end_comment;
+
+(*
+## Start symbol
+*)
+
+START = {space}, {(expression | comment), {space}};
+
+(*
+## Sample expressions
+
+```
+"A" => "B";
+_ => "C";
+"B" && "C" => "D";
+```
+
+```
+{1.} "A" => !("B");
+{2.} "B" => !("A"); {Can be logically deduced from the first rule}
+{3.} "A" && "B" => error; {Can be logically deduced from the first rule}
+{4.} !("A") && !("B") => error; {This is different from what was introduced in the previous rules}
+```
+
+```
+"A" || "B" => "C";
+!(!("A") && !("B")) => "D";
+"D" && "E" => "res";
+!("D") && !("E") => "res";
+{If res is true, then C <=> D, thus showing that A || B <=> !(!A && !B)}
+```
+
+*)
