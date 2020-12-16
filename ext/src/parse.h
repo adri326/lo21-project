@@ -5,7 +5,7 @@
 #include <rule.h>
 #include <btree.h>
 #include <linkedlist.h>
-#include <inttypes.h>
+#include <vec.h>
 
 #define BEGIN_PAREN '('
 #define END_PAREN ')'
@@ -30,15 +30,18 @@ enum EXPR_KIND {
     KIND_NOT,
     KIND_AND,
     KIND_SYMBOL,
-    KIND_ERROR
+    KIND_ERROR,
+    KIND_UNKNOWN = 99
 };
 
+/// Represents a node within the condition's AST
 struct subexpr_ast {
     enum EXPR_KIND kind;
     char symbol[SYMBOL_LEN];
 };
 typedef struct subexpr_ast subexpr_ast;
 
+/// Represents a symbol in a rule's conclusion, possibly negated
 struct ccl_symbol {
     bool negate;
     char symbol[SYMBOL_LEN];
@@ -46,14 +49,18 @@ struct ccl_symbol {
 typedef struct ccl_symbol ccl_symbol;
 
 DECL_BT(subexpr_ast);
-DECL_LL(ccl_symbol);
+DECL_VEC(ccl_symbol);
 
+/// Represents a rule: contains an AST for its condition and a list of symbols for the conclusion
 struct expr_ast {
     BT(subexpr_ast)* condition;
-    LL(ccl_symbol)* conclusion;
+    VEC(ccl_symbol)* conclusion;
+    const char* remaining_string;
 };
 typedef struct expr_ast expr_ast;
 
-DECL_LL(expr_ast);
+DECL_VEC(expr_ast);
+
+VEC(expr_ast)* ast_parse(const char* raw);
 
 #endif // PARSE_H
