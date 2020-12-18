@@ -14,9 +14,19 @@ DECL_BT_SOURCES_PRINTF_CUSTOM(subexpr_ast, {
     } else if (value.kind == KIND_NOT) {
         printf(GREEN("!"));
     }
-})
+});
 DECL_VEC_SOURCES(ccl_symbol);
 DECL_VEC_SOURCES(expr_ast);
+
+DECL_VEC_SOURCES(cond_and);
+DECL_VEC_SOURCES_PRINTF_CUSTOM(cond_and, {
+    printf("\n");
+    for (size_t n = 0; n < ccl_symbol_vec_length(value.symbols); n++) {
+        printf("%s%s ", ccl_symbol_vec_get(value.symbols, n)->negate ? "!" : "", ccl_symbol_vec_get(value.symbols, n)->symbol);
+    }
+});
+
+DECL_VEC_SOURCES(expr_flat);
 
 struct ast_ctx {
     BT(subexpr_ast)* subexpr;
@@ -235,4 +245,71 @@ VEC(expr_ast)* ast_parse(const char* raw) {
     }
 
     return res;
+}
+
+VEC(cond_and)* flatten_subexpr(BT(subexpr_ast)* subexpr, bool negate) {
+    assert(subexpr != NULL);
+
+    if (subexpr->value.kind == KIND_AND && !negate || subexpr->value.kind == KIND_OR && negate) {
+        VEC(cond_and)* left = flatten_subexpr(subexpr_ast_bt_left(subexpr), negate);
+        VEC(cond_and)* right = flatten_subexpr(subexpr_ast_bt_right(subexpr), negate);
+        VEC(cond_and)* res = cond_and_vec_new(cond_and_vec_length(left) * cond_and_vec_length(right));
+
+        // return left x right
+        for (size_t n = 0; n < cond_and_vec_length(left); n++) {
+            for (size_t o = 0; o < cond_and_vec_length(right); o++) {
+                VEC(ccl_symbol)* left_symbols = cond_and_vec_get(left, n)->symbols;
+                VEC(ccl_symbol)* right_symbols = cond_and_vec_get(right, 0)->symbols;
+                VEC(ccl_symbol)* merged_symbols = ccl_symbol_vec_new(
+                    ccl_symbol_vec_length(left_symbols)
+                    + ccl_symbol_vec_length(right_symbols)
+                );
+                for (size_t p = 0; p < ccl_symbol_vec_length(left_symbols); p++) {
+                    ccl_symbol_vec_push(merged_symbols, *ccl_symbol_vec_get(left_symbols, p));
+                }
+                for (size_t p = 0; p < ccl_symbol_vec_length(right_symbols); p++) {
+                    ccl_symbol_vec_push(merged_symbols, *ccl_symbol_vec_get(right_symbols, p));
+                }
+                cond_and_vec_push(res, (cond_and){.symbols = merged_symbols});
+            }
+        }
+
+        for (size_t n = 0; n < cond_and_vec_length(left); n++) {
+            ccl_symbol_vec_free(cond_and_vec_get(left, n)->symbols);
+        }
+
+        for (size_t n = 0; n < cond_and_vec_length(right); n++) {
+            ccl_symbol_vec_free(cond_and_vec_get(right, n)->symbols);
+        }
+
+        cond_and_vec_free(left);
+        cond_and_vec_free(right);
+        return res;
+    } else if (subexpr->value.kind == KIND_OR && !negate || subexpr->value.kind == KIND_AND && negate) {
+        VEC(cond_and)* left = flatten_subexpr(subexpr_ast_bt_left(subexpr), negate);
+        VEC(cond_and)* right = flatten_subexpr(subexpr_ast_bt_right(subexpr), negate);
+        cond_and_vec_resize(left, cond_and_vec_length(left) + cond_and_vec_length(right));
+
+        for (size_t n = 0; n < cond_and_vec_length(right); n++) {
+            cond_and_vec_push(left, *cond_and_vec_get(right, n));
+        }
+
+        cond_and_vec_free(right);
+        return left;
+    } else if (subexpr->value.kind == KIND_NOT) {
+        return flatten_subexpr(subexpr_ast_bt_left(subexpr), !negate);
+    } else if (subexpr->value.kind == KIND_SYMBOL) {
+        VEC(cond_and)* res = cond_and_vec_new(1);
+        VEC(ccl_symbol)* res_symbols = ccl_symbol_vec_new(1);
+
+        ccl_symbol res_symbol = {
+            .negate = negate
+        };
+        strcpy(res_symbol.symbol, subexpr->value.symbol);
+        ccl_symbol_vec_push(res_symbols, res_symbol);
+
+        cond_and_vec_push(res, (cond_and){.symbols = res_symbols});
+
+        return res;
+    }
 }

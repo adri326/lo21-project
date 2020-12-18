@@ -63,4 +63,22 @@ DECL_VEC(expr_ast);
 
 VEC(expr_ast)* ast_parse(const char* raw);
 
+// Ordering: ||, &&, !
+struct cond_and {
+    VEC(ccl_symbol)* symbols;
+};
+typedef struct cond_and cond_and;
+
+DECL_VEC(cond_and);
+
+struct expr_flat {
+    VEC(cond_and)* condition;
+    VEC(ccl_symbol)* conclusion;
+};
+typedef struct expr_flat expr_flat;
+
+DECL_VEC(expr_flat);
+
+VEC(cond_and)* flatten_subexpr(BT(subexpr_ast)* subexpr, bool negate);
+
 #endif // PARSE_H
