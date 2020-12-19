@@ -27,6 +27,24 @@ DECL_VEC_SOURCES_PRINTF_CUSTOM(cond_and, {
 });
 
 DECL_VEC_SOURCES(expr_flat);
+DECL_VEC_SOURCES_PRINTF_CUSTOM(expr_flat, {
+    for (size_t n = 0; n < cond_and_vec_length(value.condition); n++) {
+        if (n != 0) printf(" || ");
+        printf("(");
+        VEC(ccl_symbol)* symbols = cond_and_vec_get(value.condition, n)->symbols;
+        for (size_t o = 0; o < ccl_symbol_vec_length(symbols); o++) {
+            if (o != 0) printf(" && ");
+            printf("%s%s", ccl_symbol_vec_get(symbols, o)->negate ? "!" : "", ccl_symbol_vec_get(symbols, o)->symbol);
+        }
+        printf(")");
+    }
+    printf(" => ");
+
+    for (size_t o = 0; o < ccl_symbol_vec_length(value.conclusion); o++) {
+        if (o != 0) printf(" && ");
+        printf("%s%s", ccl_symbol_vec_get(value.conclusion, o)->negate ? "!" : "", ccl_symbol_vec_get(value.conclusion, o)->symbol);
+    }
+})
 
 struct ast_ctx {
     BT(subexpr_ast)* subexpr;
@@ -247,8 +265,9 @@ VEC(expr_ast)* ast_parse(const char* raw) {
     return res;
 }
 
+/// Flattens a single subexpression
 VEC(cond_and)* flatten_subexpr(BT(subexpr_ast)* subexpr, bool negate) {
-    assert(subexpr != NULL);
+    if (subexpr != NULL) return cond_and_vec_new(1);
 
     if (subexpr->value.kind == KIND_AND && !negate || subexpr->value.kind == KIND_OR && negate) {
         VEC(cond_and)* left = flatten_subexpr(subexpr_ast_bt_left(subexpr), negate);
@@ -312,4 +331,52 @@ VEC(cond_and)* flatten_subexpr(BT(subexpr_ast)* subexpr, bool negate) {
 
         return res;
     }
+}
+
+// Consumes ast
+VEC(expr_flat)* flatten_expressions(VEC(expr_ast)* ast) {
+#ifdef GENERATE_OPPOSITE
+    VEC(expr_flat)* res = expr_flat_vec_new(expr_ast_vec_length(ast) * 2);
+#else
+    VEC(expr_flat)* res = expr_flat_vec_new(expr_ast_vec_length(ast));
+#endif // GENERATE_OPPOSITE
+
+    for (size_t n = 0; n < expr_ast_vec_length(ast); n++) {
+        expr_ast* curr_ast = expr_ast_vec_get(ast, n);
+        expr_flat_vec_push(res, (expr_flat){
+            .condition = flatten_subexpr(curr_ast->condition, false),
+            .conclusion = curr_ast->conclusion
+        });
+
+#ifdef GENERATE_OPPOSITE
+        VEC(cond_and)* opposite_condition = flatten_subexpr(curr_ast->condition, true);
+        if (cond_and_vec_length(opposite_condition) == 1) {
+            printf("Generating opposite rule for rule #%zu\n", n);
+            VEC(ccl_symbol)* conclusion = cond_and_vec_get(opposite_condition, 0)->symbols;
+            VEC(cond_and)* condition = cond_and_vec_new(ccl_symbol_vec_length(curr_ast->conclusion));
+            for (size_t o = 0; o < ccl_symbol_vec_length(curr_ast->conclusion); o++) {
+                VEC(ccl_symbol)* symbols = ccl_symbol_vec_new(1);
+                ccl_symbol symbol = {
+                    .negate = !ccl_symbol_vec_get(curr_ast->conclusion, o)->negate
+                };
+                strcpy(symbol.symbol, ccl_symbol_vec_get(curr_ast->conclusion, o)->symbol);
+                ccl_symbol_vec_push(symbols, symbol);
+                cond_and_vec_push(condition, (cond_and){
+                    .symbols = symbols
+                });
+            }
+
+            expr_flat_vec_push(res, (expr_flat){
+                .condition = condition,
+                .conclusion = conclusion
+            });
+        }
+        cond_and_vec_free(opposite_condition);
+#endif // GENERATE_OPPOSITE
+
+        subexpr_ast_bt_free(curr_ast->condition);
+    }
+
+    expr_ast_vec_free(ast);
+    return res;
 }

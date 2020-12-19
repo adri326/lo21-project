@@ -7,7 +7,10 @@
 int main(int argc, char* argv[]) {
     printf(GREEN("Hello, world!\n"));
 
-    VEC(expr_ast)* ast = ast_parse("(\"A\" && !\"C\") || \"D\" || !\"E\" => \"B\" && !\"D\";");
-    VEC(cond_and)* flattened_condition = flatten_subexpr(expr_ast_vec_get(ast, 0)->condition, false);
-    cond_and_vec_printf(flattened_condition);
+    char* raw = "!(\"A\" && !\"C\") || \"D\" || !\"E\" => \"B\" && !\"D\";";
+    // char* raw = "\"A\" => \"B\";";
+    printf("%s\n", raw);
+    VEC(expr_ast)* ast = ast_parse(raw);
+    VEC(expr_flat)* flat = flatten_expressions(ast);
+    expr_flat_vec_printf(flat);
 }

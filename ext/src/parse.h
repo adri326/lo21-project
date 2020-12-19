@@ -61,6 +61,12 @@ typedef struct expr_ast expr_ast;
 
 DECL_VEC(expr_ast);
 
+/** Turns a raw string following the [grammar](../grammar.ebnf) into a set of expressions, whose conditions are stored as ASTs.
+
+    @param raw - String following the grammar
+    @returns VEC(expr_ast)*
+    @throw If `raw` is not a string following the grammar or if a symbol is too long
+**/
 VEC(expr_ast)* ast_parse(const char* raw);
 
 // Ordering: ||, &&, !
@@ -79,6 +85,16 @@ typedef struct expr_flat expr_flat;
 
 DECL_VEC(expr_flat);
 
-VEC(cond_and)* flatten_subexpr(BT(subexpr_ast)* subexpr, bool negate);
+/** Turns AST-encoded expressions into flattenned expressions (`expr_flat`).
+    The condition half is encoded as a list of "AND" expressions.
+    The order of the operators (from outer to inner) of the final condition will be `||`, `&&` and `!`.
+
+    The conclusion is left as-is.
+    If `GENERATE_OPPOSITE` is defined, then the opposite expressions are generated if possible (if the opposite expression's condition would only be made up of one "AND" expression).
+
+    @param ast - The `expr_ast` list to flatten
+    @returns VEC(expr_flat)
+**/
+VEC(expr_flat)* flatten_expressions(VEC(expr_ast)* ast);
 
 #endif // PARSE_H
