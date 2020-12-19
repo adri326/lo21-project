@@ -6,6 +6,8 @@
 #include <btree.h>
 #include <linkedlist.h>
 #include <vec.h>
+#include <knowledge.h>
+#include <rule.h>
 
 #define BEGIN_PAREN '('
 #define END_PAREN ')'
@@ -96,5 +98,7 @@ DECL_VEC(expr_flat);
     @returns VEC(expr_flat)
 **/
 VEC(expr_flat)* flatten_expressions(VEC(expr_ast)* ast);
+
+knowledgebase_t* simplify_expressions(VEC(expr_flat)* expressions);
 
 #endif // PARSE_H

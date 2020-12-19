@@ -267,7 +267,7 @@ VEC(expr_ast)* ast_parse(const char* raw) {
 
 /// Flattens a single subexpression
 VEC(cond_and)* flatten_subexpr(BT(subexpr_ast)* subexpr, bool negate) {
-    if (subexpr != NULL) return cond_and_vec_new(1);
+    if (subexpr == NULL) return cond_and_vec_new(1);
 
     if (subexpr->value.kind == KIND_AND && !negate || subexpr->value.kind == KIND_OR && negate) {
         VEC(cond_and)* left = flatten_subexpr(subexpr_ast_bt_left(subexpr), negate);
@@ -378,5 +378,49 @@ VEC(expr_flat)* flatten_expressions(VEC(expr_ast)* ast) {
     }
 
     expr_ast_vec_free(ast);
+    return res;
+}
+
+knowledgebase_t* simplify_expressions(VEC(expr_flat)* expressions) {
+    knowledgebase_t* res = NULL;
+
+    for (size_t n = 0; n < expr_flat_vec_length(expressions); n++) {
+        expr_flat* expr = expr_flat_vec_get(expressions, n);
+        for (size_t d = 0; d < cond_and_vec_length(expr->condition); d++) {
+            VEC(ccl_symbol)* condition = cond_and_vec_get(expr->condition, d)->symbols;
+            for (size_t l = 0; l < ccl_symbol_vec_length(expr->conclusion); l++) {
+                rule_t* rule = NULL;
+                for (size_t o = 0; o < ccl_symbol_vec_length(condition); o++) {
+                    // Convert condition ccl_symbol to char[]
+                    char symbol[SYMBOL_LEN];
+                    if (strlen(ccl_symbol_vec_get(condition, o)->symbol) >= SYMBOL_LEN - 1) {
+                        printf("Symbol length too long!\n");
+                        exit(2);
+                    }
+                    sprintf(symbol, "%s%s",
+                        ccl_symbol_vec_get(condition, o)->negate ? "!" : "",
+                        ccl_symbol_vec_get(condition, o)->symbol
+                    );
+                    // Push condition symbol
+                    rule = push_symbol(rule, symbol);
+                }
+
+                // Convert conclusion symbol to char[]
+                char conclusion[SYMBOL_LEN];
+                if (strlen(ccl_symbol_vec_get(expr->conclusion, l)->symbol) >= SYMBOL_LEN - 1) {
+                    printf("Symbol length too long!\n");
+                    exit(2);
+                }
+                sprintf(conclusion, "%s%s",
+                    ccl_symbol_vec_get(expr->conclusion, l)->negate ? "!" : "",
+                    ccl_symbol_vec_get(expr->conclusion, l)->symbol
+                );
+                // Push conclusion symbol
+                rule = push_symbol_conclusion(rule, conclusion);
+                res = push_rule(res, rule);
+            }
+        }
+    }
+
     return res;
 }
