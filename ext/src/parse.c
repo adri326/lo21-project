@@ -16,6 +16,10 @@ DECL_BT_SOURCES_PRINTF_CUSTOM(subexpr_ast, {
     }
 });
 DECL_VEC_SOURCES(ccl_symbol);
+DECL_VEC_SOURCES_PRINTF_CUSTOM(ccl_symbol, {
+    printf("%s%s", value.negate ? "!" : "", value.symbol);
+})
+
 DECL_VEC_SOURCES(expr_ast);
 
 DECL_VEC_SOURCES(cond_and);

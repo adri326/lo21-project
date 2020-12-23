@@ -14,10 +14,12 @@ include(lists/include.cmake)
 set(SRC_FILES
     src/main.c
     src/parse.c
+    src/cmd.c
 )
 
 set(HEADER_FILES
     src/parse.h
+    src/cmd.h
 )
 
 add_executable(lo21-project-ext ${SRC_FILES} ${HEADER_FILES})
