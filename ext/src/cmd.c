@@ -84,3 +84,13 @@ command parse_command(const char* raw) {
 
     return res;
 }
+
+void free_command(command cmd) {
+    for (size_t n = 0; n < parameter_vec_length(cmd.parameters); n++) {
+        parameter* p = parameter_vec_get(cmd.parameters, n);
+        if (p->type == PARAM_SYMBOLS) {
+            ccl_symbol_vec_free(p->value.param_symbols);
+        }
+    }
+    parameter_vec_free(cmd.parameters);
+}

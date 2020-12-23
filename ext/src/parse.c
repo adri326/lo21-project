@@ -125,7 +125,7 @@ expr_ast ast_parse_sub(const char* raw) {
         if (*raw == TERMINAL) break;
         else if (*raw == BEGIN_COMMENT) in_comment = true;
         else if (*raw == END_COMMENT) in_comment = false;
-        else if (*raw == ' ') {
+        else if (*raw == ' ' || *raw == '\n') {
             raw++;
             continue;
         }
@@ -239,7 +239,7 @@ expr_ast ast_parse_sub(const char* raw) {
 
     res.condition = ast_ctx_vec_get(stack, 0)->subexpr;
     res.remaining_string = raw;
-    subexpr_ast_bt_printf(res.condition);
+    // subexpr_ast_bt_printf(res.condition);
     ast_ctx_vec_free(stack);
     return res;
 }
@@ -264,6 +264,7 @@ VEC(expr_ast)* ast_parse(const char* raw) {
             printf("Unexpected character: '" CYAN("%c") "', did you forget a '" CYAN(";") "'?\n", *raw);
             exit(2);
         }
+        raw++;
     }
 
     return res;

@@ -33,5 +33,6 @@ typedef struct command command;
 /// Parses commands
 
 command parse_command(const char* raw);
+void free_command(command cmd);
 
 #endif // CMD_H
