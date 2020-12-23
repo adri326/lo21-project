@@ -22,5 +22,7 @@ void print_symbols(const char* header, const symbols_t* symbols);
 /// Prints out a list of symbols, diffing them with diff_symbols and highlighting the ones that are in symbols but not in diff_symbols
 void print_symbols_diff(const char* header, const symbols_t* symbols, const symbols_t* diff_symbols);
 
+/// Returns `elem ∈ set`
+bool symbol_in(const char* elem, const symbols_t* set);
 
 #endif // INFERENCE_H

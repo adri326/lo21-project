@@ -1,0 +1,26 @@
+{Proof that (A || B) && C => (A && C) || B}
+{Run `forall ["A" "B" "C"] "Z"` to see the inference engine validate the proof!}
+
+{Encode both halves as 'X' and 'Y':}
+
+    {Simple implications:}
+        {(A || B) && C => X:}
+            ("A" || "B") && "C" => "X";
+
+        {(A && C) || B => Y:}
+            ("A" && "C") || "B" => "Y";
+
+    {Opposite implications:}
+        {X => (A || B) && C:}
+            !(("A" || "B") && "C") => !"X";
+
+        {Y => (A && C) || B:}
+            !(("A" && "C") || "B") => !"Y";
+
+{Coding in X => Y:}
+
+    {(X && Y) || !X => Z:}
+        ("X" && "Y") || !("X") => "Z";
+
+    {X && !Y => !Z:}
+        "X" && !("Y") => !"Z";

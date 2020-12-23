@@ -124,7 +124,11 @@ expr_ast ast_parse_sub(const char* raw) {
     while (*raw != '\0') {
         if (*raw == TERMINAL) break;
         else if (*raw == BEGIN_COMMENT) in_comment = true;
-        else if (*raw == END_COMMENT) in_comment = false;
+        else if (*raw == END_COMMENT) {
+            in_comment = false;
+            raw++;
+            continue;
+        }
         else if (*raw == ' ' || *raw == '\n') {
             raw++;
             continue;

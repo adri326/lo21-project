@@ -47,35 +47,7 @@ int main(int argc, char* argv[]) {
         if (fgets(command_raw, COMMAND_LEN, stdin) == NULL) break;
         command cmd = parse_command(command_raw);
 
-        if (strcmp(cmd.name, "eval") == 0) {
-            if (parameter_vec_length(cmd.parameters) == 0) {
-                printf("Invalid command: expected at least one parameter!\n");
-            } else {
-                for (size_t n = 0; n < parameter_vec_length(cmd.parameters); n++) {
-                    parameter* p = parameter_vec_get(cmd.parameters, n);
-                    symbols_t* symbols = NULL;
-                    if (p->type == PARAM_INT) {
-                        printf("Invalid parameter: expected single symbol or symbol list\n");
-                        continue;
-                    } else if (p->type == PARAM_SYMBOL) {
-                        symbols = push_symbol(symbols, p->value.param_symbol);
-                    } else if (p->type == PARAM_SYMBOLS) {
-                        ccl_symbol_vec_printf(p->value.param_symbols);
-                        for (size_t o = 0; o < ccl_symbol_vec_length(p->value.param_symbols); o++) {
-                            symbols = push_symbol(symbols, ccl_symbol_vec_get(p->value.param_symbols, o)->symbol);
-                            printf("%s\n", symbols->symbol);
-                        }
-                    }
-
-                    print_symbols("Input", symbols);
-                    symbols_t* res = inference_engine(kb, symbols);
-                    print_symbols_diff("Output", res, symbols);
-
-                    free_symbols(symbols);
-                    free_symbols(res);
-                }
-            }
-        }
+        handle_command(cmd, kb);
 
         free_command(cmd);
     }

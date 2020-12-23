@@ -2,6 +2,7 @@
 #define CMD_H
 
 #include <vec.h>
+#include <knowledge.h>
 #include "parse.h"
 #define CMD_LEN 16
 
@@ -34,5 +35,6 @@ typedef struct command command;
 
 command parse_command(const char* raw);
 void free_command(command cmd);
+void handle_command(command cmd, knowledgebase_t* kb);
 
 #endif // CMD_H
