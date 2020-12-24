@@ -1,0 +1,8 @@
+{Shows that A || B <=> !(!A && !B):}
+{Run `forall ["A" "B"] "res"` to see the engine validate this.}
+
+"A" || "B" <=> "C";
+!(!("A") && !("B")) <=> "D";
+
+"C" && "D" => "res";
+!("C") && !("D") => "res";

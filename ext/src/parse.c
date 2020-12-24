@@ -120,6 +120,7 @@ expr_ast ast_parse_sub(const char* raw) {
 
     bool in_comment = false;
     bool conclusion = false;
+    enum EXPR_KIND kind = KIND_THUS;
 
     while (*raw != '\0') {
         if (*raw == TERMINAL) break;
@@ -195,6 +196,10 @@ expr_ast ast_parse_sub(const char* raw) {
             } else if (*raw == '=' && raw[1] == '>' && !conclusion) { // Parse =>
                 raw++;
                 conclusion = true;
+            } else if (*raw == '<' && raw[1] == '=' && raw[2] == '>' && !conclusion) { // Parse <=>
+                raw += 2;
+                conclusion = true;
+                kind = KIND_EQV;
             // TODO: use `AND`
             } else if (*raw == '&' && raw[1] == '&') { // Parse &&
                 raw++;
@@ -240,7 +245,16 @@ expr_ast ast_parse_sub(const char* raw) {
         printf("Rule has no conclusion! Did you forget a '" CYAN("=>") "'?\n");
         exit(2);
     }
+    if (kind == KIND_EQV && ccl_symbol_vec_length(res.conclusion) != 1) {
+        printf("A rule with an equivalence symbol ('" CYAN("<=>") "' is expected to have exactly one conclusion symbol!\n");
+        exit(2);
+    }
+    if (ccl_symbol_vec_length(res.conclusion) == 0) {
+        printf("Rule has no conclusion symbol!\n");
+        exit(2);
+    }
 
+    res.kind = kind;
     res.condition = ast_ctx_vec_get(stack, 0)->subexpr;
     res.remaining_string = raw;
     // subexpr_ast_bt_printf(res.condition);
@@ -271,6 +285,41 @@ VEC(expr_ast)* ast_parse(const char* raw) {
         raw++;
     }
 
+    return res;
+}
+
+VEC(expr_ast)* ast_expand_eqv(VEC(expr_ast)* ast) {
+    VEC(expr_ast)* res = expr_ast_vec_new(expr_ast_vec_length(ast));
+    for (size_t n = 0; n < expr_ast_vec_length(ast); n++) {
+        if (expr_ast_vec_get(ast, n)->kind == KIND_THUS) {
+            expr_ast_vec_push(res, *expr_ast_vec_get(ast, n));
+        } else if (expr_ast_vec_get(ast, n)->kind == KIND_EQV) {
+            expr_ast e = *expr_ast_vec_get(ast, n);
+            e.kind = KIND_THUS;
+
+            // Push regular expression
+            expr_ast_vec_push(res, e);
+
+            // Clone condition and conclusion
+            e.condition = subexpr_ast_bt_clone(e.condition);
+            e.conclusion = ccl_symbol_vec_clone(e.conclusion);
+
+            // Invert conclusion symbol
+            ccl_symbol* ccl_symbol = ccl_symbol_vec_get(e.conclusion, 0);
+            ccl_symbol->negate = !ccl_symbol->negate;
+
+            // Invert condition
+            e.condition = subexpr_ast_bt_connect(e.condition, NULL, (subexpr_ast){
+                .kind = KIND_NOT,
+                .symbol = ""
+            });
+
+            // Push inverted expression
+            expr_ast_vec_push(res, e);
+        }
+    }
+
+    expr_ast_vec_free(ast);
     return res;
 }
 
@@ -344,11 +393,7 @@ VEC(cond_and)* flatten_subexpr(BT(subexpr_ast)* subexpr, bool negate) {
 
 // Consumes ast
 VEC(expr_flat)* flatten_expressions(VEC(expr_ast)* ast) {
-#ifdef GENERATE_OPPOSITE
-    VEC(expr_flat)* res = expr_flat_vec_new(expr_ast_vec_length(ast) * 2);
-#else
     VEC(expr_flat)* res = expr_flat_vec_new(expr_ast_vec_length(ast));
-#endif // GENERATE_OPPOSITE
 
     for (size_t n = 0; n < expr_ast_vec_length(ast); n++) {
         expr_ast* curr_ast = expr_ast_vec_get(ast, n);

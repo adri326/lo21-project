@@ -29,7 +29,8 @@ end_comment = "}";
 not_symbol = "!";
 and_symbol = "&&";
 or_symbol = "||";
-thus_symbol = "=>";
+(* The latter automatically substitutes A <=> B with A => B and !A => B *)
+thus_symbol = "=>" | "<=>";
 terminal_symbol = ";";
 
 (*
@@ -104,8 +105,8 @@ _ => "C";
 ```
 "A" || "B" => "C";
 !(!("A") && !("B")) => "D";
-"D" && "E" => "res";
-!("D") && !("E") => "res";
+"C" && "D" => "res";
+!("C") && !("D") => "res";
 {If res is true, then C <=> D, thus showing that A || B <=> !(!A && !B)}
 ```
 

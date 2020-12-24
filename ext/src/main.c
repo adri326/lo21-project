@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
     fread(raw, length - 1, 1, input_file);
 
     // printf("%s\n", raw);
-    VEC(expr_ast)* ast = ast_parse(raw);
+    VEC(expr_ast)* ast = ast_expand_eqv(ast_parse(raw));
     free(raw);
 
     VEC(expr_flat)* flat = flatten_expressions(ast);

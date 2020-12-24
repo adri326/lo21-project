@@ -24,6 +24,7 @@
 #define AND "&&"
 #define OR "||"
 #define THUS "=>"
+#define EQV "<=>"
 #define NOT "!"
 #define ERR "error"
 
@@ -33,6 +34,10 @@ enum EXPR_KIND {
     KIND_AND,
     KIND_SYMBOL,
     KIND_ERROR,
+
+    KIND_THUS,
+    KIND_EQV,
+
     KIND_UNKNOWN = 99
 };
 
@@ -58,6 +63,7 @@ struct expr_ast {
     BT(subexpr_ast)* condition;
     VEC(ccl_symbol)* conclusion;
     const char* remaining_string;
+    enum EXPR_KIND kind;
 };
 typedef struct expr_ast expr_ast;
 
@@ -70,6 +76,13 @@ DECL_VEC(expr_ast);
     @throw If `raw` is not a string following the grammar or if a symbol is too long
 **/
 VEC(expr_ast)* ast_parse(const char* raw);
+
+/** Expands the equivalence relationships within the different expr_ast
+
+    @param ast - VEC(expr_ast)*; gets consumed
+    @returns VEC(expr_ast)*
+**/
+VEC(expr_ast)* ast_expand_eqv(VEC(expr_ast)* ast);
 
 // Ordering: ||, &&, !
 struct cond_and {
