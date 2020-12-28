@@ -120,6 +120,7 @@ expr_ast ast_parse_sub(const char* raw) {
 
     bool in_comment = false;
     bool conclusion = false;
+    bool has_error = false;
     enum EXPR_KIND kind = KIND_THUS;
 
     while (*raw != '\0') {
@@ -163,6 +164,11 @@ expr_ast ast_parse_sub(const char* raw) {
 
                 symbol_name[symbol_length] = 0;
 
+                if (strcmp(symbol_name, ERR) == 0) {
+                    printf("Cannot name symbol '" CYAN(ERR) "', try removing the '" CYAN("\"") "' to turn it into an error symbol!\n");
+                    exit(2);
+                }
+
                 // Appends the symbol to either the conclusion or the condition
                 if (conclusion) {
                     ccl_symbol symbol = {
@@ -191,6 +197,7 @@ expr_ast ast_parse_sub(const char* raw) {
                     ctx.negate_next = false;
                     strcpy(symbol.symbol, ERR);
                     ccl_symbol_vec_push(res.conclusion, symbol);
+                    has_error = true;
                 } else {
                     printf("Unexpected '" CYAN("error") "' in condition!");
                 }
@@ -272,6 +279,14 @@ expr_ast ast_parse_sub(const char* raw) {
     }
     if (kind == KIND_EQV && ccl_symbol_vec_length(res.conclusion) != 1) {
         printf("A rule with an equivalence symbol ('" CYAN("<=>") "' is expected to have exactly one conclusion symbol!\n");
+        exit(2);
+    }
+    if (kind == KIND_EQV && has_error) {
+        printf("A rule with an equivalence symbol ('" CYAN("<=>") "' cannot have as conclusion an '" RED("error") "'!\n");
+        exit(2);
+    }
+    if (has_error && ccl_symbol_vec_length(res.conclusion) != 1) {
+        printf("A rule that results in an '" RED("error") "' can only have one conclusion symbol!\n");
         exit(2);
     }
     if (ccl_symbol_vec_length(res.conclusion) == 0) {
@@ -429,7 +444,10 @@ VEC(expr_flat)* flatten_expressions(VEC(expr_ast)* ast) {
 
 #ifdef GENERATE_OPPOSITE
         VEC(cond_and)* opposite_condition = flatten_subexpr(curr_ast->condition, true);
-        if (cond_and_vec_length(opposite_condition) == 1) {
+        if (
+            cond_and_vec_length(opposite_condition) == 1
+            && strcmp(ccl_symbol_vec_get(curr_ast->conclusion, 0)->symbol, ERR) != 0
+        ) {
             printf("Generating opposite rule for rule #%zu\n", n);
             VEC(ccl_symbol)* conclusion = cond_and_vec_get(opposite_condition, 0)->symbols;
             VEC(cond_and)* condition = cond_and_vec_new(ccl_symbol_vec_length(curr_ast->conclusion));
@@ -458,6 +476,72 @@ VEC(expr_flat)* flatten_expressions(VEC(expr_ast)* ast) {
 
     expr_ast_vec_free(ast);
     return res;
+}
+
+VEC(expr_flat)* generate_errors(VEC(expr_flat)* expressions) {
+    bool ccl_symbol_eq(const ccl_symbol* a, const void* b) {
+        return strcmp(a->symbol, ((ccl_symbol*)b)->symbol) == 0;
+    }
+
+    VEC(ccl_symbol)* symbols = ccl_symbol_vec_new(1);
+
+    for (size_t n = 0; n < expr_flat_vec_length(expressions); n++) {
+        expr_flat* expr = expr_flat_vec_get(expressions, n);
+        for (size_t d = 0; d < cond_and_vec_length(expr->condition); d++) {
+            VEC(ccl_symbol)* condition = cond_and_vec_get(expr->condition, d)->symbols;
+            for (size_t o = 0; o < ccl_symbol_vec_length(condition); o++) {
+                if (
+                    strcmp(ccl_symbol_vec_get(condition, o)->symbol, ERR) != 0
+                    && ccl_symbol_vec_find(
+                        symbols,
+                        &ccl_symbol_eq,
+                        ccl_symbol_vec_get(condition, o)
+                    ) == -1
+                ) {
+                    ccl_symbol_vec_push(symbols, *ccl_symbol_vec_get(condition, o));
+                }
+            }
+        }
+
+        for (size_t o = 0; o < ccl_symbol_vec_length(expr->conclusion); o++) {
+            if (
+                strcmp(ccl_symbol_vec_get(expr->conclusion, o)->symbol, ERR) != 0
+                && ccl_symbol_vec_find(
+                    symbols,
+                    &ccl_symbol_eq,
+                    ccl_symbol_vec_get(expr->conclusion, o)
+                ) == -1
+            ) {
+                ccl_symbol_vec_push(symbols, *ccl_symbol_vec_get(expr->conclusion, o));
+            }
+        }
+    }
+
+    ccl_symbol_vec_printf(symbols);
+    for (size_t n = 0; n < ccl_symbol_vec_length(symbols); n++) {
+        ccl_symbol symbol = *ccl_symbol_vec_get(symbols, n);
+        symbol.negate = false;
+        VEC(cond_and)* condition = cond_and_vec_new(1);
+        VEC(ccl_symbol)* tmp_condition = ccl_symbol_vec_new(2);
+
+        ccl_symbol_vec_push(tmp_condition, symbol);
+        symbol.negate = true;
+        ccl_symbol_vec_push(tmp_condition, symbol);
+        cond_and_vec_push(condition, (cond_and){.symbols = tmp_condition});
+
+        VEC(ccl_symbol)* conclusion = ccl_symbol_vec_new(1);
+        ccl_symbol_vec_push(conclusion, (ccl_symbol){
+            .negate = false,
+            .symbol = "error"
+        });
+
+        expr_flat_vec_push(expressions, (expr_flat){
+            .condition = condition,
+            .conclusion = conclusion
+        });
+    }
+
+    return expressions;
 }
 
 knowledgebase_t* simplify_expressions(VEC(expr_flat)* expressions) {

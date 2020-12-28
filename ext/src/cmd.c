@@ -163,6 +163,7 @@ void handle_command(command cmd, knowledgebase_t* kb) {
         }
 
         bool res = true;
+        bool err = false;
         for (uintmax_t perm = 0; perm < (1 << ccl_symbol_vec_length(variable_symbols)); perm++) {
             symbols_t* input = NULL;
             if (parameter_vec_length(cmd.parameters) == 3) {
@@ -189,13 +190,25 @@ void handle_command(command cmd, knowledgebase_t* kb) {
             symbols_t* output = inference_engine(kb, input);
             bool is_in = symbol_in(required_symbol_param->value.param_symbol, output);
 
+            if (symbol_in("error", output)) {
+                is_in = false;
+                err = true;
+            }
+
             if (!is_in) {
                 print_symbols("Input", input);
                 print_symbols_diff("Output", output, input);
+                printf("\n");
             }
 
             res = res && is_in;
         }
-        printf(GRAY("∴ ") CYAN("∀") GRAY(" -> ") "%s\n", res ? GREEN("true") : RED("false"));
+
+        printf(
+            GRAY("∴ ") CYAN("∀") GRAY(" -> ") "%s\n",
+            err ? RED("error") : (
+                res ? GREEN("true") : RED("false")
+            )
+        );
     }
 }

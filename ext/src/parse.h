@@ -112,6 +112,8 @@ DECL_VEC(expr_flat);
 **/
 VEC(expr_flat)* flatten_expressions(VEC(expr_ast)* ast);
 
+VEC(expr_flat)* generate_errors(VEC(expr_flat)* expressions);
+
 knowledgebase_t* simplify_expressions(VEC(expr_flat)* expressions);
 
 #endif // PARSE_H

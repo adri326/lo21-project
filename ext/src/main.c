@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
     VEC(expr_ast)* ast = ast_expand_eqv(ast_parse(raw));
     free(raw);
 
-    VEC(expr_flat)* flat = flatten_expressions(ast);
+    VEC(expr_flat)* flat = generate_errors(flatten_expressions(ast));
     // expr_flat_vec_printf(flat);
 
     knowledgebase_t* kb = simplify_expressions(flat);
@@ -52,4 +52,5 @@ int main(int argc, char* argv[]) {
         free_command(cmd);
     }
 
+    free_kb(kb);
 }

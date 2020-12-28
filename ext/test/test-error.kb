@@ -1,3 +1,11 @@
-"A" && !"A" => error;
+{
+This test aims to show how errors work.
+An error for "A" and "!A" being present at the same time is automatically generated.
+If the "error" symbol is set to true, then an error is printed out.
+Try running `eval "causes_error"` to see that error being printed!
+Note that errors are not generated for symbols that are not in the input knowledgebase. This means that `eval ["B" "!B"]` causes no errors.
+}
+"causes_error" => "A" && !"A";
 
-"B" => "A" && !"A";
+{This is an example of a custom error, running `eval "not_nice"` triggers that error.}
+"not_nice" => error;
