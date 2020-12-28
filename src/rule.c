@@ -144,10 +144,23 @@ void print_rule(const rule_t* rule) {
         printf("\n");
         return;
     }
-    if (rule->next == NULL) printf("%s\n", rule->symbol);
+    if (rule->next == NULL) {
+        if (strcmp(rule->symbol, "error") == 0) {
+            printf(RED("%s") "\n", rule->symbol);
+        } else {
+            printf("%s\n", rule->symbol);
+        }
+        return;
+    }
     bool first = true;
     while (rule != NULL) {
-        if (rule->next == NULL) printf(CYAN("=>") " %s\n", rule->symbol);
+        if (rule->next == NULL) {
+            if (strcmp(rule->symbol, "error") == 0) {
+                printf(CYAN("=>") RED(" %s") "\n", rule->symbol);
+            } else {
+                printf(CYAN("=>") " %s\n", rule->symbol);
+            }
+        }
         else {
             if (first) printf("%s ", rule->symbol);
             else printf(CYAN("&") " %s ", rule->symbol);

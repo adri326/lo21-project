@@ -16,6 +16,9 @@ bool is_condition_true(rule_t* rule, const symbols_t* symbols);
 /// [3]: The inference engine; infers which symbols are true from a list of initially true symbols and a knowledge base
 symbols_t* inference_engine(knowledgebase_t* base, const symbols_t* input_symbols);
 
+/// Prints out an error related to a rule
+void print_error(const rule_t* rule, const symbols_t* current_symbols);
+
 /// Prints out a list of symbols
 void print_symbols(const char* header, const symbols_t* symbols);
 

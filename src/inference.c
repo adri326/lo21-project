@@ -52,6 +52,12 @@ symbols_t* inference_engine(knowledgebase_t* base, const symbols_t* input_symbol
             if (!symbols_contain(res, rule_conclusion(kb_head(tmp)))) {
                 // If the condition is true, then we add the conclusion to `res`
                 if (is_condition_true(kb_head(tmp), res)) {
+                    #ifdef PRINT_ERRORS
+                        if (strcmp(rule_conclusion(kb_head(tmp)), "error") == 0) {
+                            print_error(kb_head(tmp), res);
+                        }
+                    #endif // PRINT_ERRORS
+
                     res = new_rule(rule_conclusion(kb_head(tmp)), res);
                     has_added = true;
                 }
@@ -93,12 +99,33 @@ void print_symbols_diff(const char* header, const symbols_t* symbols, const symb
         printf(CYAN("<none>"));
     }
     while (symbols != NULL) {
-        if (symbol_in(symbols->symbol, diff_symbols)) {
+        if (strcmp(symbols->symbol, "error") == 0) {
+            printf(RED("%s "), symbols->symbol);
+        } else if (symbol_in(symbols->symbol, diff_symbols)) {
             printf("%s ", symbols->symbol);
         } else {
             printf(GREEN("%s "), symbols->symbol);
         }
         symbols = symbols->next;
+    }
+    printf("\n");
+}
+
+void print_error(const rule_t* rule, const symbols_t* current_symbols) {
+    printf(GRAY("\u250f\u2509") RED(" Error:\n"));
+    printf(GRAY("\u2520 "));
+    print_rule(rule);
+
+    printf(GRAY("\u2503  ") BLUE("Current symbols:\n"));
+    printf(GRAY("\u2517 "));
+
+    while (current_symbols != NULL) {
+        if (symbol_in(current_symbols->symbol, rule)) {
+            printf(RED("%s "), current_symbols->symbol);
+        } else {
+            printf("%s ", current_symbols->symbol);
+        }
+        current_symbols = current_symbols->next;
     }
     printf("\n");
 }

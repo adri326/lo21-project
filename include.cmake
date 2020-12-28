@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 option(FAITHFUL_IMPLEMENTATION "ON to enable faithful implementation (slower, default), OFF to disable it (faster)" ON)
+option(PRINT_ERRORS "ON to print out errors (default), OFF for silent mode" ON)
 
 if(WIN32)
   set(DEFAULT_NO_COLOR OFF)
@@ -16,6 +17,10 @@ endif()
 
 if(NO_COLOR)
   add_compile_definitions(NO_COLOR)
+endif()
+
+if(PRINT_ERRORS)
+  add_compile_definitions(PRINT_ERRORS)
 endif()
 
 set(INFERENCE_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/src")

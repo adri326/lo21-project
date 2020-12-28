@@ -130,7 +130,7 @@ expr_ast ast_parse_sub(const char* raw) {
             raw++;
             continue;
         }
-        else if (*raw == ' ' || *raw == '\n') {
+        else if (*raw == ' ' || *raw == '_' || *raw == '\n') {
             raw++;
             continue;
         }
@@ -145,9 +145,18 @@ expr_ast ast_parse_sub(const char* raw) {
 
                 // Parses the body of the symbol
                 while (*(++raw) != '"') {
-                    symbol_name[symbol_length++] = *raw;
-                    if (symbol_length >= SYMBOL_LEN - 1) {
-                        printf("Error: symbol too long!\n");
+                    if (*raw >= 'A' && *raw <= 'Z' || *raw >= 'a' && *raw <= 'z' || *raw == '_' || *raw >= '0' && *raw <= '9') {
+                        symbol_name[symbol_length++] = *raw;
+                        if (symbol_length >= SYMBOL_LEN - 1) {
+                            printf("Error: symbol too long!\n");
+                            exit(2);
+                        }
+                    } else {
+                        printf("Invalid symbol character: '" CYAN("%c") "'", *raw);
+                        if (*raw == '!') {
+                            printf("; did you forget to put the '" CYAN("!") "' before the symbol (eg. '" GREEN("!\"symbol\"") "')?");
+                        }
+                        printf("\n");
                         exit(2);
                     }
                 }
@@ -168,6 +177,22 @@ expr_ast ast_parse_sub(const char* raw) {
                     };
                     strcpy(symbol_subexpr.symbol, symbol_name);
                     push_subexpr(&ctx, subexpr_ast_bt_new(symbol_subexpr));
+                }
+            } else if (*raw == 'e' && strncmp(raw, ERR, strlen(ERR)) == 0) {
+                raw += strlen(ERR) - 1;
+                if (ctx.negate_next) {
+                    printf("Cannot negate '" CYAN("error") "'!\n");
+                    exit(2);
+                }
+                if (conclusion) {
+                    ccl_symbol symbol = {
+                        .negate = ctx.negate_next,
+                    };
+                    ctx.negate_next = false;
+                    strcpy(symbol.symbol, ERR);
+                    ccl_symbol_vec_push(res.conclusion, symbol);
+                } else {
+                    printf("Unexpected '" CYAN("error") "' in condition!");
                 }
             } else if (*raw == BEGIN_PAREN && !conclusion) { // Parse (
                 // Creates a new context, pushes back ctx and then the new context
@@ -440,6 +465,24 @@ knowledgebase_t* simplify_expressions(VEC(expr_flat)* expressions) {
 
     for (size_t n = 0; n < expr_flat_vec_length(expressions); n++) {
         expr_flat* expr = expr_flat_vec_get(expressions, n);
+
+        if (cond_and_vec_length(expr->condition) == 0) { // No condition
+            for (size_t l = 0; l < ccl_symbol_vec_length(expr->conclusion); l++) {
+                char conclusion[SYMBOL_LEN];
+                if (strlen(ccl_symbol_vec_get(expr->conclusion, l)->symbol) >= SYMBOL_LEN - 1) {
+                    printf("Symbol length too long!\n");
+                    exit(2);
+                }
+                sprintf(conclusion, "%s%s",
+                    ccl_symbol_vec_get(expr->conclusion, l)->negate ? "!" : "",
+                    ccl_symbol_vec_get(expr->conclusion, l)->symbol
+                );
+                // Push conclusion symbol
+                rule_t* rule = push_symbol_conclusion(NULL, conclusion);
+                res = push_rule(res, rule);
+            }
+        }
+
         for (size_t d = 0; d < cond_and_vec_length(expr->condition); d++) {
             VEC(ccl_symbol)* condition = cond_and_vec_get(expr->condition, d)->symbols;
             for (size_t l = 0; l < ccl_symbol_vec_length(expr->conclusion); l++) {
