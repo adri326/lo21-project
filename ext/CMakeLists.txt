@@ -3,9 +3,14 @@ cmake_minimum_required(VERSION 3.15)
 project(lo21-project-ext)
 
 option(GENERATE_OPPOSITE "ON to enable opposite rule generation, OFF to disable" ON)
+option(GENERATE_ERRORS "ON to enable error rule generation, OFF to disable" ON)
 
 if(GENERATE_OPPOSITE)
   add_compile_definitions(GENERATE_OPPOSITE)
+endif()
+
+if(GENERATE_ERROR)
+  add_compile_definitions(GENERATE_ERROR)
 endif()
 
 include(../include.cmake)

@@ -39,3 +39,7 @@ You might also need to run the command `chcp 65001` on the windows DOS-like prom
 ## Included tests
 
 Sample datasets are included with this project and their source code can be found in `src/test.c`.
+
+## Extension
+
+This project includes an extension over the basic requirements of it, which can be found in the `ext/` directory. Check out its documentation [here](ext/README.md)!
