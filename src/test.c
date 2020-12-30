@@ -80,7 +80,7 @@ void test_1(bool verbose) {
 // A & C => D
 // B & C => D
 /** Test 2
-    A more complicated test, which sets "D" to true iff exactly two of "A", "B" and "C" are true (ie. "A & B", "A & C" or "B & C").
+    A more complicated test, which sets "D" to true if any two of "A", "B" and "C" are true (ie. "A & B", "A & C" or "B & C").
 
     The small loop within this test tries each of these combinations and expects "D" to be set to true:
 
@@ -143,8 +143,9 @@ void test_2(bool verbose) {
 // Show that (A || B) & C => (A & C) || B
 // <=>
 // a)
-// A & C => D
-// B & C => D
+// A => tmp
+// B => tmp
+// tmp & C => D
 // b)
 // A & C => E
 // B => E
@@ -157,8 +158,9 @@ void test_2(bool verbose) {
     The left-hand side of the relationship yields the value "D", while the right-hand side yields the value "E".
     We obtain the following rules:
 
-    - A & C => D
-    - B & C => D
+    - A => tmp
+    - B => tmp
+    - tmp & C => D
     - A & C => E
     - B => E
 
@@ -167,13 +169,13 @@ void test_2(bool verbose) {
     The loop generates the 8 different sets of symbols; the expected outputs are thus:
 
     - ∅ --> ∅
-    - A --> A
-    - B --> B, E
-    - A, B --> A, B, E
+    - A --> A, tmp
+    - B --> B, E, tmp
+    - A, B --> A, B, E, tmp
     - C --> C,
-    - A, C --> A, C, D, E
-    - B, C --> B, C, D, E
-    - A, B, C --> A, B, C, D, E
+    - A, C --> A, C, D, E, tmp
+    - B, C --> B, C, D, E, tmp
+    - A, B, C --> A, B, C, D, E, tmp
 
     You can see that for each result, either "D" is false or both "D" and "E" are true.
 **/
@@ -181,28 +183,32 @@ void test_3(bool verbose) {
     printf(GRAY("\n==> ") "Test 3:\n\n");
     rule_t* rule_1 = empty_rule();
     rule_1 = push_symbol(rule_1, "A");
-    rule_1 = push_symbol(rule_1, "C");
-    rule_1 = push_symbol_conclusion(rule_1, "D");
+    rule_1 = push_symbol_conclusion(rule_1, "tmp");
 
     rule_t* rule_2 = empty_rule();
     rule_2 = push_symbol(rule_2, "B");
-    rule_2 = push_symbol(rule_2, "C");
-    rule_2 = push_symbol_conclusion(rule_2, "D");
+    rule_2 = push_symbol_conclusion(rule_2, "tmp");
 
     rule_t* rule_3 = empty_rule();
-    rule_3 = push_symbol(rule_3, "A");
+    rule_3 = push_symbol(rule_3, "tmp");
     rule_3 = push_symbol(rule_3, "C");
-    rule_3 = push_symbol_conclusion(rule_3, "E");
+    rule_3 = push_symbol_conclusion(rule_3, "D");
 
     rule_t* rule_4 = empty_rule();
-    rule_4 = push_symbol(rule_4, "B");
+    rule_4 = push_symbol(rule_4, "A");
+    rule_4 = push_symbol(rule_4, "C");
     rule_4 = push_symbol_conclusion(rule_4, "E");
+
+    rule_t* rule_5 = empty_rule();
+    rule_5 = push_symbol(rule_5, "B");
+    rule_5 = push_symbol_conclusion(rule_5, "E");
 
     knowledgebase_t* kb = empty_kb();
     kb = push_rule(kb, rule_1);
     kb = push_rule(kb, rule_2);
     kb = push_rule(kb, rule_3);
     kb = push_rule(kb, rule_4);
+    kb = push_rule(kb, rule_5);
 
     print_kb(kb);
 
@@ -236,6 +242,7 @@ void test_3(bool verbose) {
     free_rule(rule_2);
     free_rule(rule_3);
     free_rule(rule_4);
+    free_rule(rule_5);
     free_kb(kb);
 
     printf(GRAY("\n-> ") "Test 3: " GREEN("success!") "\n\n");

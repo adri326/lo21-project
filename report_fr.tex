@@ -38,6 +38,7 @@
 \SetKwIF{If}{ElseIf}{Else}{Si}{alors}{Sinon si}{Sinon}{FinSi}
 \SetKwFor{While}{Tant que}{faire}{Fin TantQue}
 \SetKwBlock{Begin}{D\'ebut}{Fin}
+\SetKwBlock{BeginKB}{D\'ebut BC}{Fin BC}
 \SetKwRepeat{Repeat}{Faire}{Tant que}
 \DontPrintSemicolon
 \SetAlgoLined
@@ -671,9 +672,234 @@ Nous assumons que les symboles ont une longueur maximale fixée au préalable, f
 \caption{PrémisseVraie\label{PVr}}
 \end{algorithm}
 
+\newpage
+
 \section{Jeux d'essais}
+
+\RestyleAlgo{plain}
 
 Voici quelques jeux d'essais pour tester les capacités du moteur d'inférence.
 Ceux-cis peuvent être retrouvés dans le fichier \textbf{src/test.c} (utilisant les fonctions décrites jusqu'ici).
+
+Pour simplifier la lecture de ceux-cis, nous omettrons les algorithmes permettant de générer la base de connaissance et fournirons à la place une représentation visuelle de celle-ci.
+
+\subsection{Test basique}
+
+Ce premier essai est un essai très simple, visant à vérifier le bon fonctionnement des fonctions \hyperref[PV]{PrémisseVraie} et \hyperref[MI]{MoteurInférence}.
+Le symbole $C$ ne doit être ajouté que si $A$ et $B$ sont vrais; dans les autres cas, la liste d'entrée reste intouchée.
+
+\begin{algorithm}
+\BeginKB(Test 1\label{T1}){
+  $A \land B \Rightarrow C$
+}
+\end{algorithm}
+
+\begin{tabular}{|p{4cm}|p{6.5cm}|}
+  \hline
+  \multicolumn{2}{|c|}{\textbf{Test 1 :}} \\
+  \hline
+  \textbf{Symboles d'entrée} & \textbf{Symboles de sortie} \\
+  \hline
+  $\emptyset$ & $\emptyset$ \\
+  \hline
+  $A$ & $A$ \\
+  \hline
+  $B$ & $B$ \\
+  \hline
+  $A, B$ & $A, B, \mathbf{C}$ \\
+  \hline
+\end{tabular}
+
+\subsection{Somme égale à 2}
+
+Ce test ajoute le symbole $D$ à la liste de sortie si 2 symboles parmis $A$, $B$ et $C$ sont présents ($A, B$ ou $A, C$ ou $B, C$).
+Ce test vise à vérifier le bon fonctionnement du \hyperref[MI]{moteur d'inférence}: plusieures règles peuvent avoir la même conclusion, permettant de simuler l'opérateur $\lor$.
+
+\begin{algorithm}
+\BeginKB(Test 2\label{T2}){
+  $A \land B \Rightarrow D$ \\
+  $A \land C \Rightarrow D$ \\
+  $B \land C \Rightarrow D$ \\
+}
+\end{algorithm}
+
+Ces trois règles peuvent être réduites à $(A \land B) \lor (A \land C) \lor (B \land C) \Rightarrow D$ ($\lor$ correspond à \og ou \fg).
+
+\begin{tabular}{|p{4cm}|p{6.5cm}|}
+  \hline
+  \multicolumn{2}{|c|}{\textbf{Test 2:}} \\
+  \hline
+  \textbf{Symboles d'entrée} & \textbf{Symboles de sortie} \\
+  \hline
+  $A, B$ & $A, B, \mathbf{D}$ \\
+  \hline
+  $A, C$ & $A, C, \mathbf{D}$ \\
+  \hline
+  $B, C$ & $B, C, \mathbf{D}$ \\
+  \hline
+  $A, B, C$ & $A, B, C, \mathbf{D}$ \\
+  \hline
+\end{tabular}
+
+\subsection{Distributivité du \og et \fg}
+
+Ce test tente de prouver que $(A \lor B) \land C \Rightarrow (A \land C) \lor B$.
+Pour ce faire, les deux moitiés de l'implication sont séparés en deux symboles \og cibles \fg, $D$ et $E$:
+
+\begin{algorithm}
+\BeginKB{
+  $(A \lor B) \land C \Rightarrow D$ \\
+  $(A \land C) \lor B \Rightarrow E$
+}
+\end{algorithm}
+
+Nous devons ensuite réecrire ces deux règles sous le format accepté par le moteur d'inférence; nous faisons la substitution $tmp \equiv (A \lor B)$ et distribuons les $\lor$ sur les $\Rightarrow$:
+
+\begin{algorithm}
+\BeginKB(Test 3\label{T3}){
+  \tcp{Partie gauche}
+  $A \Rightarrow tmp$ \\
+  $B \Rightarrow tmp$ \\
+  $tmp \land C \Rightarrow D$ \\
+
+  \tcp{Partie droite}
+  $A \land C \Rightarrow E$ \\
+  $B \Rightarrow E$
+}
+\end{algorithm}
+
+Il nous suffit ensuite de vérifier que $D \rightarrow E$ pour les 8 différentes combinaisons de $A$, $B$ et $C$:
+
+\begin{tabular}{|p{4cm}|p{6.5cm}|}
+  \hline
+  \multicolumn{2}{|c|}{\textbf{Test 3:}} \\
+  \hline
+  \textbf{Symboles d'entrée} & \textbf{Symboles de sortie} \\
+  \hline
+  $\emptyset$ & $\emptyset$ \\
+  \hline
+  $A$ & $A, \mathbf{tmp}$ \\
+  \hline
+  $B$ & $B, \mathbf{tmp}, \mathbf{E}$ \\
+  \hline
+  $A, B$ & $A, B, \mathbf{tmp}, \mathbf{E}$ \\
+  \hline
+  $C$ & $C$ \\
+  \hline
+  $A, C$ & $A, C, \mathbf{tmp}, \mathbf{D}, \mathbf{E}$ \\
+  \hline
+  $B, C$ & $B, C, \mathbf{tmp}, \mathbf{D}, \mathbf{E}$ \\
+  \hline
+  $A, B, C$ & $A, B, C, \mathbf{tmp}, \mathbf{D}, \mathbf{E}$ \\
+  \hline
+\end{tabular}
+
+Nous pouvons observer dans les trois derniers cas que si $D$ est présent, alors $E$ est présent.
+$D$ n'étant pas présents dans les 5 autres cas, notre théorème est vérifié.
+
+\section{Extension du moteur d'inférence}
+
+Comme nous l'avons vu précédemment, nous pouvons facilement introduire le symbole $\lor$ (\og ou \fg) et éxecuter différentes transformations pour arriver à un ensemble de règles ne contenant que les opérateurs $\land$ et $\Rightarrow$.
+
+La \href{https://github.com/adri326/lo21-project}{version de ce projet publiée en ligne} contient une telle extension, introduisant \href{https://github.com/adri326/lo21-project/blob/ext/ext/grammar.ebnf}{un langage} dédié à celle-ci.
+
+Cette extension introduit aussi l'opérateur $\neg$ (\og non \fg) et l'opérateur $\Leftrightarrow$ ('og ssi \fg). Les opérations de simplification sont les suivantes:
+
+\begin{itemize}
+  \item $\neg(A \land B) \; \mapsto \; \neg{A} \lor \neg{B} \enspace [A, B]$
+  \item $\neg(A \lor B) \; \mapsto \; \neg{A} \land \neg{B} \enspace [A, B]$
+  \item $A \lor B \Rightarrow C \; \mapsto \; (A \Rightarrow C), (B \Rightarrow C) \enspace [A, B, C]$
+  \item $A \Rightarrow C \land D \; \mapsto \; (A \Rightarrow C), (A \Rightarrow D) \enspace [A, C, D]$
+  \item $\neg \neg A \; \mapsto \; A$
+  \item $A \Leftrightarrow B \; \mapsto \; (A \Rightarrow B), (\neg A \Rightarrow \neg B)$
+\end{itemize}
+
+Une fois ces simplifications appliquées, nous obtenons un ensemble de règle que le \hyperref[MI]{moteur d'inférence} peut comprendre.
+
+L'implémentation de l'extension lit et analyse un fichier écrit dans le langage dédié et le transforme par distributivité du $\land$ en un ensemble de règles du format:
+
+\[BC* \vdash (\bigvee_{x=0}^{x < p}\bigwedge_{y=0}^{y < p'_x} S_{x,y}) \Rightarrow \bigwedge_{x=0}^{y < q} T_x\]
+
+\[\text{Avec (1): } \quad \forall x (\bigwedge_{y=0}^{y < p'_x} S_{x,y}) =
+  S_{x,0} \land S_{x,1} \land ... \land S_{x,p\-1}
+\]
+
+\[\text{Avec (2): } \quad (\bigvee_{x=0}^{x < p} S_x') = \begin{cases}
+  S_0' \lor S_1' \lor ... \lor S_{p-1}' & \text{Si } p > 0 \\
+  Vrai & \text{Si } p = 0
+\end{cases}
+\]
+
+\[\text{Avec (3): } \quad \forall (x, y), S_{x,y} = \begin{cases}
+  S \in \text{Symbole} & \text{Si le symbole n'est pas inversé} \\
+  \neg S \in \neg \text{Symbole} & \text{Si le symbole est inversé}
+\end{cases}
+\]
+
+\[\text{Avec (4):} \quad \forall x, p'_x > 0\]
+
+\[\text{Avec (5): } \quad \bigwedge_{x=0}^{y < q} T_x =
+  T_0 \land T_1 \land ... \land T_q\-1
+\]
+
+\[\text{Avec (6): } \quad \forall x, T_x = \begin{cases}
+  S \in \text{Symbole} & \text{Si le symbole n'est pas inversé} \\
+  \neg S \in \neg \text{Symbole} & \text{Si le symbole est inversé}
+\end{cases}
+\]
+
+\[\text{Avec (7): } \quad q > 0\]
+
+Les simplifications sont ensuite appliquées pour arriver à un ensemble de règles du \hyperref[MI]{format accepté par le moteur d'inférence}, avec pour différence que l'ensemble des symboles est étendu à $Symbole* = Symbole \cup \neg Symbole$.
+Lors de cette simplification, le programme est également capable de transformer la majorité des règles en leurs règles opposées.
+
+Le programme attend enfin que l'utilisateur entre une ou plusieures commandes, celles-ci éxecutant le moteur d'inférence avec différents symboles d'entrée.
+
+\subsection{Exemple: distributivité du \og et \fg}
+
+Similairement au \hyperref[T3]{Test 3}, nous pouvons exprimer la relation $(A \lor B) \land C \Rightarrow (A \land C) \lor B$ dans cette extension:
+
+\begin{algorithm}[H]
+\BeginKB{
+  $(A \lor B) \land C \Leftrightarrow D$ \\
+  $(A \land C) \lor B \Leftrightarrow E$ \\
+  $(D \land E) \lor \neg D \Leftrightarrow \textit{résultat}$
+}
+\end{algorithm}
+
+Nous éxécutons après simplification le moteur d'inférence avec pour entrée les permutations de $A/\neg A$, $B/\neg B$ et $C/\neg C$:
+
+\begin{tabular}{|p{4cm}|p{6.5cm}|}
+  \hline
+  \multicolumn{2}{|c|}{\textbf{Test 3:}} \\
+  \hline
+  \textbf{Symboles d'entrée} & \textbf{Symboles de sortie} \\
+  \hline
+  $\neg A, \neg B, \neg C$ & $\neg A, \neg B, \neg C, \mathbf{\neg D}, \mathbf{\neg E}, \textbf{résultat}$ \\
+  \hline
+  $A, \neg B, \neg C$ & $A, \neg B, \neg C, \mathbf{\neg D}, \mathbf{\neg E}, \textbf{résultat}$ \\
+  \hline
+  $\neg A, B, \neg C$ & $\neg A, B, \neg C, \mathbf{\neg D}, \mathbf{E}, \textbf{résultat}$ \\
+  \hline
+  $A, B, \neg C$ & $A, B, \neg C, \mathbf{\neg D}, \mathbf{E}, \textbf{résultat}$ \\
+  \hline
+  $\neg A, \neg B, C$ & $\neg A, \neg B, C, \mathbf{\neg D}, \mathbf{\neg E}, \textbf{résultat}$ \\
+  \hline
+  $A, \neg B, C$ & $A, \neg B, C, \mathbf{D}, \mathbf{E}, \textbf{résultat}$ \\
+  \hline
+  $\neg A, B, C$ & $\neg A, B, C, \mathbf{D}, \mathbf{E}, \textbf{résultat}$ \\
+  \hline
+  $A, B, C$ & $A, B, C, \mathbf{D}, \mathbf{E}, \textbf{résultat}$ \\
+  \hline
+\end{tabular}
+
+\textbf{résultat} étant vrai dans tous les cas, le théorème $(A \lor B) \land C \Rightarrow (A \land C) \lor B$ est validé.
+
+\section{Conclusion}
+
+Nous avons, pour ce projet, décrit le fonctionnement d'un système expert simple sous forme d'algorithme et implémenté celui-ci en langage C.
+Nous avons aussi pu étendre ce système expert à l'ensemble de l'algèbre booléen et le munir d'un langage dédié et d'une interface interactive.
+
+L'implémentation de base ainsi que son extension ont étés capables de prouver des théorèmes simples dans l'algèbre booléen.
 
 \end{document}
