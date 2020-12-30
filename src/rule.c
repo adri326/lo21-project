@@ -144,7 +144,10 @@ void print_rule(const rule_t* rule) {
         printf("\n");
         return;
     }
-    if (rule->next == NULL) printf("%s\n", rule->symbol);
+    if (rule->next == NULL) {
+        printf("%s\n", rule->symbol);
+        return;
+    }
     bool first = true;
     while (rule != NULL) {
         if (rule->next == NULL) printf(CYAN("=>") " %s\n", rule->symbol);
