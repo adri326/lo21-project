@@ -39,3 +39,7 @@ You might also need to run the command `chcp 65001` on the windows DOS-like prom
 ## Included tests
 
 Sample datasets are included with this project and their source code can be found in `src/test.c`.
+
+# Extension
+
+A powerful extension, featuring complete boolean logic, can be found in the [ext](https://github.com/adri326/lo21-project/tree/ext) branch.

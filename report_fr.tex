@@ -33,6 +33,8 @@
 \SetKwInput{Result}{R\'esultat}
 \SetKwInput{Vars}{Variables}
 \SetKwInput{Assertion}{Assertion}
+\SetKwInput{KWClass}{Classe}
+\newcommand{\Class}[1]{\KWClass{$\mathcal{O}(#1)$}}
 \SetKwIF{If}{ElseIf}{Else}{Si}{alors}{Sinon si}{Sinon}{FinSi}
 \SetKwFor{While}{Tant que}{faire}{Fin TantQue}
 \SetKwBlock{Begin}{D\'ebut}{Fin}
@@ -138,7 +140,11 @@ Nous pouvons noter que:
 
 Liste $\prec$ Règle [$\emptyset$: \textit{règle\_vide}, tête: \textit{symbole}, reste: \textit{suivant}, insérer\_tête: \textit{nouvelle\_règle}, Élement: Symbole]
 
-(Un type concret implémentant Règle implémente également Liste(Symbole))
+(Soit également un type concret implémentant Règle implémente également Liste(Symbole))
+
+Nous avons implémenté ce type abstrait de donnée sous forme d'une liste chaînée, de part sa facilité d'implémentation et la difficulté d'implémenter un type abstrait de donnée grandissable par la tête sous tout autre forme qu'une liste chaînée.
+
+Le fait que ce type abstrait soit grandissable par la tête reflète également la difficulté de décrire de manière concise et simple à comprendre toute autre forme de type abstrait représentant une liste.
 
 % 1.1
 \subsection{Créer une règle vide}
@@ -149,6 +155,7 @@ Voici l'algorithme permettant de créer une règle vide:
 \begin{algorithm}[H]
 \Vars{\Arg{$R$}{La règle vide à retourner}}
 \Result{\Arg{$R$}{Règle}}
+\Class{1}
 
 \Begin({RègleVide()}){
   \Assign{$R$}{\textit{règle\_vide}}
@@ -169,10 +176,16 @@ Voici l'algorithme permettant de créer une règle vide:
 %
 % Le problème est, à mon avis, qu'ajouter un symbole à la prémisse d'une règle ne devrait pas affecter la conclusion d'une règle, ce qui n'est pas le cas lorsque l'ajout se fait à l'endroit dédié à la conclusion de la règle.
 % Cela voudra aussi dire que la fonction pour ajouter une conclusion à une règle sera identique à celle-ci.
+%
+% PS: après plusieures semaines de travail sur ce projet, je pense que le sujet attendait que l'on utilise une liste grandissable en queue pour Règle, et que l'on décrive ses fonctions de manière sémantique, et non de manière axiomatique.
 
 L'ajout des propositions (symboles) à la prémisse d'une règle se fait par l'algorithme \textit{AjoutPrémisse} défini ci-dessous.
 Cet ajout se fait en queue de la liste (contrainte du projet).
-La liste donnée en entrée est modifiée par l'algorithme et est retournée.
+
+La liste donnée en entrée est modifiée par l'algorithme et est ensuite retournée; ceci est dû aux contraintes des listes chaînées dans l'implémentation C et du type abstrait de donnée Règle: si la liste est initialement vide (représenté par \Null et \textit{règle\_vide}), alors nous ne pouvons pas muter celle-ci en utilisant \textit{mettre\_suivant}.
+Ceci est géré par le premier \textbf{Si}.
+
+\newpage
 
 \begin{algorithm}[H]
 \Vars{
@@ -185,6 +198,7 @@ La liste donnée en entrée est modifiée par l'algorithme et est retournée.
 \Data{\Arg{$R$}{Règle}, \Arg{\textit{symbole}}{Symbole}}
 \Result{\Arg{$R$}{Règle}}
 \Assertion{$R$ n'a pas encore de conclusion}
+\Class{n}
 
 \Begin({AjoutPrémisse($R$, \textit{symbole})}){
   \uIf{$R$ = \textit{règle\_vide}}{
@@ -224,6 +238,7 @@ Pour ce faire, nous ré-utilisons l'algorithme \hyperref[AP]{AjoutPrémisse} dé
 \Data{\Arg{$R$}{Règle}, \Arg{\textit{symbole}}{Symbole}}
 \Result{\Arg{$R$}{Règle}}
 \Assertion{$R$ n'a pas encore de conclusion}
+\Class{n}
 
 \Begin({AjoutConclusion($R$, \textit{symbole})}){
   \Assign{$R$}{\hyperref[AP]{AjoutPrémisse}($R$, \textit{symbole})}
@@ -258,6 +273,7 @@ Dans les autres cas, nous retournons de manière récursive le résultat de la m
 \Data{\Arg{$R$}{Règle}, \Arg{\textit{symbole}}{Symbole}}
 \Result{\Arg{\textit{résultat}}{Booléen}}
 \Assertion{$R$ a une conclusion}
+\Class{n}
 
 \Begin({TestAppartenance($R$, \textit{symbole})}){
   \uIf{$R$ = \textit{règle\_vide}}{
@@ -284,6 +300,7 @@ Dans les autres cas, nous retournons de manière récursive le résultat de la m
 \subsection{Supprimer une proposition de la prémisse d'une règle}
 
 Nous supprimons une proposition de la prémisse d'une règle de manière récursive.
+Cette décision est motivée par le format de Règle et sa simplicité d'implémentation.
 Les cas minimaux sont les suivants:
 
 \begin{description}
@@ -291,7 +308,7 @@ Les cas minimaux sont les suivants:
   \item[$R$ = \{symbole: "...", suivant: \textit{règle\_vide}\}] (conclusion): retourner $R$
 \end{description}
 
-Dans le cas général, nous attribuons à \Child{$R$}{\textit{suivant}} la valeur retournée par cette fonction, appelée sur \Child{$R$}{\textit{suivant}}, et nous retournons \Child{$R$}{\textit{suivant}} si le noeud correspond au symbole et $R$ sinon.
+Dans le cas général, nous attribuons à \Child{$R$}{\textit{suivant}} la valeur retournée par cette fonction, appelée sur \Child{$R$}{\textit{suivant}}, puis nous retournons soit \Child{$R$}{\textit{suivant}} si le noeud correspond au symbole, soit $R$ sinon.
 
 \begin{algorithm}[H]
 \Vars{
@@ -304,6 +321,7 @@ Dans le cas général, nous attribuons à \Child{$R$}{\textit{suivant}} la valeu
 \Data{\Arg{$R$}{Règle}, \Arg{\textit{symbole}}{Symbole}}
 \Result{\Arg{$R'$}{Règle}}
 \Assertion{$R$ a une conclusion}
+\Class{n}
 
 \Begin({SupprimerSymbole($R$, \textit{symbole})}){
   \uIf{$R$ = \textit{règle\_vide}}{
@@ -343,6 +361,7 @@ Voici la fonction retournant \og Vrai \fg si la prémisse d'une règle est vide 
 \Data{\Arg{$R$}{Règle}}
 \Result{\Arg{\textit{résultat}}{Booléen}}
 \Assertion{$R$ a une conclusion ou $R$ est vide}
+\Class{1}
 
 \Begin({PrémisseVide($R$)}){
   \uIf{$R$ = \textit{règle\_vide}}{
@@ -365,7 +384,7 @@ Voici la fonction retournant \og Vrai \fg si la prémisse d'une règle est vide 
 \subsection{Accéder à la proposition se trouvant en tête d'une prémisse}
 
 Voici la fonction retournant la valeur de la proposition se trouvant en tête d'une prémisse.
-Si la prémisse est vide, alors la fonction retourne \textit{règle\_vide}.
+Si la prémisse est vide, alors la fonction retourne \textit{symbole\_vide} ($\emptyset$).
 
 \begin{algorithm}[H]
 \Vars{
@@ -377,11 +396,12 @@ Si la prémisse est vide, alors la fonction retourne \textit{règle\_vide}.
 \Data{\Arg{$R$}{Règle}}
 \Result{\Arg{\textit{résultat}}{Symbole}}
 \Assertion{$R$ a une conclusion}
+\Class{1}
 
 \Begin({TêteRègle($R$)}){
   \uIf{\hyperref[PV]{PrémisseVide}($R$)}{
-    \tcp{La prémisse est vide: nous retournons \textit{règle\_vide}}
-    \Assign{\textit{résultat}}{\textit{règle\_vide}}
+    \tcp{La prémisse est vide: nous retournons \textit{symbole\_vide}}
+    \Assign{\textit{résultat}}{\textit{symbole\_vide}}
   }
   \Else{
     \Assign{\textit{résultat}}{\Child{$R$}{\textit{symbole}}}
@@ -394,7 +414,7 @@ Si la prémisse est vide, alors la fonction retourne \textit{règle\_vide}.
 % 1.8
 \subsection{Accéder à la conclusion d'une règle}
 
-La conclusion se trouvant à la fin d'une règle, nous traversons simplement la liste jusqu'au dernier élément de celle-ci.
+La conclusion se trouvant à la fin d'une règle, nous traversons simplement la liste jusqu'au dernier élément de celle-ci et retournons sa valeur.
 Si la liste est vide, alors la fonction retourne \textit{règle\_vide}.
 
 \begin{algorithm}[H]
@@ -408,6 +428,7 @@ Si la liste est vide, alors la fonction retourne \textit{règle\_vide}.
 \Data{\Arg{$R$}{Règle}}
 \Result{\Arg{\textit{résultat}}{Symbole}}
 \Assertion{$R$ a une conclusion}
+\Class{n}
 
 \Begin({ConclusionRègle($R$)}){
   \uIf{\Child{$R$}{\textit{suivant}} = \textit{règle\_vide}}{
@@ -456,6 +477,8 @@ Les axiomes sur ces fonctions sont:
   \item \textit{suivant}(\textit{nouvelle\_base}(r, b)) = b
 \end{itemize}
 
+Pour les même raisons que celles de Règle, le type abstrait BC est grandissable par la tête et son implémentation proposée se fait sous la forme d'une liste chaînée.
+
 % 2.1
 \subsection{Créer une base vide}
 
@@ -465,6 +488,7 @@ Voici l'algorithme permettant de créer une base vide:
 \begin{algorithm}[H]
 \Vars{\Arg{$B$}{La base vide à retourner}}
 \Result{\Arg{$B$}{BC}}
+\Class{1}
 
 \Begin({BaseVide()}){
   \Assign{$B$}{\textit{base\_vide}}
@@ -476,7 +500,7 @@ Voici l'algorithme permettant de créer une base vide:
 % 2.2
 \subsection{Ajouter une règle à une base de connaissance}
 
-L'ajout de règle à la base de connaissance se fait en tête. Voici son algorithme:
+L'ajout de règle à la base de connaissance se fait en tête (pour sa simplicité d'implémentation). Voici son algorithme:
 
 \begin{algorithm}[H]
 \Vars{
@@ -488,6 +512,8 @@ L'ajout de règle à la base de connaissance se fait en tête. Voici son algorit
 }
 \Data{\Arg{$B$}{BC}; \Arg{\textit{règle}}{Règle}}
 \Result{\Arg{$B'$}{BC}}
+\Class{1}
+
 \Begin({AjoutRègle($B$, \textit{règle})}){
   \Assign{$B'$}{\textit{nouvelle\_base}(\textit{règle}, $B$)}
 }
@@ -498,7 +524,7 @@ L'ajout de règle à la base de connaissance se fait en tête. Voici son algorit
 % 2.3
 \subsection{Accéder à la règle se trouvant en tête de la base}
 
-Voici l'algorithme permettant d'accéder à la règle se trouvant en tête:
+Voici l'algorithme permettant d'accéder à la règle se trouvant en tête; s'il n'y a pas de règle en tête, nous retournons \textit{règle\_vide}.
 
 \begin{algorithm}[H]
 \Vars{
@@ -509,6 +535,8 @@ Voici l'algorithme permettant d'accéder à la règle se trouvant en tête:
 }
 \Data{\Arg{$B$}{BC}}
 \Result{\Arg{$R$}{Règle}}
+\Class{1}
+
 \Begin({TêteBase($B$)}){
   \uIf{$B$ = \textit{base\_vide}}{
     \Assign{$R$}{\textit{règle\_vide}}
@@ -523,7 +551,7 @@ Voici l'algorithme permettant d'accéder à la règle se trouvant en tête:
 
 \section{Moteur d'inférence}
 
-Le moteur d'inférence est un algorithme permettant de déduire à partir de la liste initiale des symboles (propositions) ayant la valeur \og Vrai \fg et de la base de connaissance la liste de tous les symboles étant vrais.
+Le moteur d'inférence est un algorithme permettant de déduire à partir de la liste initiale des symboles (propositions) ayant la valeur \og Vrai \fg et de la base de connaissance (BC) la liste de tous les symboles étant vrais.
 
 L'algorithme éxecute un maximum de $n$ (la longueur de la base de connaissance) passages sur les règles, celles-cis prenant la forme suivante ($p \geq 0$ symboles $S_x$ dans la prémisse et le symbole $\Omega_k$ dans la conclusion):
 
@@ -537,10 +565,13 @@ L'algorithme éxecute un maximum de $n$ (la longueur de la base de connaissance)
 
 Si $\Omega_k$ n'appartient pas encore à la liste des symboles vrais et que $\forall x \in [0, p[, S_x = Vrai$ ou $p = 0$, alors on ajoute $\Omega_k$ à la liste des symboles vrais.
 
+Nous notons par la suite $n$ pour la longueur de la base de connaissance, $p$ pour la longueur maximale des règles de la base de connaissance et $q$ pour le nombre de symboles différents faisant partie de la base de connaissance ou étant initiallement présents dans $S$.
+Nous assumons que les symboles ont une longueur maximale fixée au préalable, faisant de leur comparaison une fonction de classe $\mathcal{O}(1)$.
+
 \begin{algorithm}
 \Vars{
   \begin{itemize}
-    \item \Arg{$B$}{La base de connaissance}
+    \item \Arg{$B$}{La base de connaissance, de longueur $n$ et dont les règles ont pour longueur maximale $p$.}
     \item \Arg{$B'$}{Variable temporaire pour traverser la base de connaissance}
     \item \Arg{$S$}{La liste des symboles initialements vrais}
     \item \Arg{$S'$}{La liste des symboles initialement vrais ainsi que ceux déduits des règles d'induction}
@@ -550,6 +581,8 @@ Si $\Omega_k$ n'appartient pas encore à la liste des symboles vrais et que $\fo
 \Data{\Arg{$B$}{BC}; \Arg{$S$}{Liste(Symbole)}}
 \Result{\Arg{$S'$}{Liste(Symbole)}}
 \Assertion{$\forall R \in B, R \neq$ \textit{règle\_vide}}
+\Class{n^2 \cdot q \cdot p}
+
 \Begin({MoteurInférence($B$, $S$)}){
   \Assign{$S'$}{$S$}
 
@@ -587,6 +620,8 @@ Si $\Omega_k$ n'appartient pas encore à la liste des symboles vrais et que $\fo
 }
 \Data{\Arg{$L$}{Liste($T$)}; \Arg{$E$}{$T$}}
 \Result{\Arg{\textit{résultat}}{Booléen}}
+\Class{longueur(L)}
+
 \Begin({ListeContient($L$, $E$)}){
   \uIf{\textit{est\_vide}($L$)}{
     \Assign{\textit{résultat}}{Faux}
@@ -606,8 +641,8 @@ Si $\Omega_k$ n'appartient pas encore à la liste des symboles vrais et que $\fo
 \begin{algorithm}
 \Vars{
   \begin{itemize}
-  \item \Arg{$S$}{La liste de symboles vrais}
-  \item \Arg{$R$}{La règle à vérifier}
+  \item \Arg{$S$}{La liste de symboles vrais, de longueur maximale $q$}
+  \item \Arg{$R$}{La règle à vérifier, de longueur maximale $p$}
   \item \Arg{$R'$}{Variable utilisée pour traverser $R$}
   \item \Arg{\textit{résultat}}{Si oui ou non la prémisse de la règle est vraie}
   \end{itemize}
@@ -615,6 +650,7 @@ Si $\Omega_k$ n'appartient pas encore à la liste des symboles vrais et que $\fo
 \Data{\Arg{$R$}{Règle}; \Arg{$S$}{Liste(Symbole)}}
 \Result{\Arg{\textit{résultat}}{Booléen}}
 \Assertion{$R \neq$ \textit{règle\_vide}}
+\Class{p \cdot q}
 
 \Begin({PrémisseVraie($R$, $S$)}){
   \Assign{\textit{résultat}}{Vrai}
@@ -634,5 +670,10 @@ Si $\Omega_k$ n'appartient pas encore à la liste des symboles vrais et que $\fo
 
 \caption{PrémisseVraie\label{PVr}}
 \end{algorithm}
+
+\section{Jeux d'essais}
+
+Voici quelques jeux d'essais pour tester les capacités du moteur d'inférence.
+Ceux-cis peuvent être retrouvés dans le fichier \textbf{src/test.c} (utilisant les fonctions décrites jusqu'ici).
 
 \end{document}
