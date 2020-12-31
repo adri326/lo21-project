@@ -802,8 +802,9 @@ $D$ n'étant pas présents dans les 5 autres cas, notre théorème est vérifié
 Comme nous l'avons vu précédemment, nous pouvons facilement introduire le symbole $\lor$ (\og ou \fg) et éxecuter différentes transformations pour arriver à un ensemble de règles ne contenant que les opérateurs $\land$ et $\Rightarrow$.
 
 La \href{https://github.com/adri326/lo21-project}{version de ce projet publiée en ligne} contient une telle extension, introduisant \href{https://github.com/adri326/lo21-project/blob/ext/ext/grammar.ebnf}{un langage} dédié à celle-ci.
+Cette extension introduit aussi l'opérateur $\neg$ (\og non \fg) et l'opérateur $\Leftrightarrow$ (\og ssi \fg).
 
-Cette extension introduit aussi l'opérateur $\neg$ (\og non \fg) et l'opérateur $\Leftrightarrow$ ('og ssi \fg). Les opérations de simplification sont les suivantes:
+Nous pouvons appliquer les opérations de simplification suivantes pour passer du langage utilisant les opérateurs \((\lor, \land, \neg, \Rightarrow, \Leftrightarrow)\) au langage utilisant uniquement les opérateurs \((\land, \neg, \Rightarrow)\):
 
 \begin{itemize}
   \item $\neg(A \land B) \; \mapsto \; \neg{A} \lor \neg{B} \enspace [A, B]$
@@ -816,58 +817,57 @@ Cette extension introduit aussi l'opérateur $\neg$ (\og non \fg) et l'opérateu
 
 Une fois ces simplifications appliquées, nous obtenons un ensemble de règle que le \hyperref[MI]{moteur d'inférence} peut comprendre.
 
+\subsection{Implémentation}
+
 L'implémentation de l'extension lit et analyse un fichier écrit dans le langage dédié et le transforme par distributivité du $\land$ en un ensemble de règles du format:
 
 \[BC* \vdash (\bigvee_{x=0}^{x < p}\bigwedge_{y=0}^{y < p'_x} S_{x,y}) \Rightarrow \bigwedge_{x=0}^{y < q} T_x\]
 
-\[\text{Avec (1): } \quad \forall x (\bigwedge_{y=0}^{y < p'_x} S_{x,y}) =
-  S_{x,0} \land S_{x,1} \land ... \land S_{x,p\-1}
-\]
+Tel que:
 
-\[\text{Avec (2): } \quad (\bigvee_{x=0}^{x < p} S_x') = \begin{cases}
-  S_0' \lor S_1' \lor ... \lor S_{p-1}' & \text{Si } p > 0 \\
-  Vrai & \text{Si } p = 0
-\end{cases}
-\]
+\begin{align}
+  \forall x (\bigwedge_{y=0}^{y < p'_x} S_{x,y})
+    &= S_{x,0} \land S_{x,1} \land ... \land S_{x,p\-1} \\
+  (\bigvee_{x=0}^{x < p} S_x')
+    &= \begin{cases}
+      S_0' \lor S_1' \lor ... \lor S_{p-1}' & \text{Si } p > 0 \\
+      Vrai & \text{Si } p = 0
+    \end{cases} \\
+  \forall (x, y), S_{x,y}
+    &= \begin{cases}
+      S \in \textit{Symbole} & \text{Symbole non-inversé} \\
+      \neg S \in \neg \textit{Symbole} & \text{Symbole inversé}
+    \end{cases} \\
+  \bigwedge_{x=0}^{y < q} T_x
+    &= T_0 \land T_1 \land ... \land T_q\-1 \\
+  \forall x, T_x
+    &= \begin{cases}
+      S \in \textit{Symbole} & \text{Symbole non-inversé} \\
+      \neg S \in \neg \textit{Symbole} & \text{Symbole inversé}
+    \end{cases} \\
+  \forall x, p'_x &> 0 \\
+  q &> 0
+\end{align}
 
-\[\text{Avec (3): } \quad \forall (x, y), S_{x,y} = \begin{cases}
-  S \in \text{Symbole} & \text{Si le symbole n'est pas inversé} \\
-  \neg S \in \neg \text{Symbole} & \text{Si le symbole est inversé}
-\end{cases}
-\]
-
-\[\text{Avec (4):} \quad \forall x, p'_x > 0\]
-
-\[\text{Avec (5): } \quad \bigwedge_{x=0}^{y < q} T_x =
-  T_0 \land T_1 \land ... \land T_q\-1
-\]
-
-\[\text{Avec (6): } \quad \forall x, T_x = \begin{cases}
-  S \in \text{Symbole} & \text{Si le symbole n'est pas inversé} \\
-  \neg S \in \neg \text{Symbole} & \text{Si le symbole est inversé}
-\end{cases}
-\]
-
-\[\text{Avec (7): } \quad q > 0\]
-
-Les simplifications sont ensuite appliquées pour arriver à un ensemble de règles du \hyperref[MI]{format accepté par le moteur d'inférence}, avec pour différence que l'ensemble des symboles est étendu à $Symbole* = Symbole \cup \neg Symbole$.
+Les simplifications sont ensuite appliquées pour arriver à un ensemble de règles du \hyperref[MI]{format accepté par le moteur d'inférence}, avec pour différence que l'ensemble des symboles est étendu à $Symbole^{*} = Symbole \; \cup \; \neg Symbole$.
 Lors de cette simplification, le programme est également capable de transformer la majorité des règles en leurs règles opposées.
 
 Le programme attend enfin que l'utilisateur entre une ou plusieures commandes, celles-ci éxecutant le moteur d'inférence avec différents symboles d'entrée.
 
 \subsection{Exemple: distributivité du \og et \fg}
 
-Similairement au \hyperref[T3]{Test 3}, nous pouvons exprimer la relation $(A \lor B) \land C \Rightarrow (A \land C) \lor B$ dans cette extension:
+Similairement au \hyperref[T3]{Test 3}, nous pouvons exprimer la relation $(A \lor B) \land C \Rightarrow (A \land C) \lor B$ de cette manière, en utilisant cette fois-ci les symboles que l'extension nous propose:
 
 \begin{algorithm}[H]
-\BeginKB{
+\BeginKB(Test 4\label{T4}){
   $(A \lor B) \land C \Leftrightarrow D$ \\
   $(A \land C) \lor B \Leftrightarrow E$ \\
   $(D \land E) \lor \neg D \Leftrightarrow \textit{résultat}$
 }
 \end{algorithm}
 
-Nous éxécutons après simplification le moteur d'inférence avec pour entrée les permutations de $A/\neg A$, $B/\neg B$ et $C/\neg C$:
+Cette base de donnée est encodée dans le langage de l'extension et lui est donnée en entrée.
+Nous éxécutons ensuite le moteur d'inférence avec pour entrée les permutations de $A/\neg A$, $B/\neg B$ et $C/\neg C$:
 
 \begin{tabular}{|p{4cm}|p{6.5cm}|}
   \hline
@@ -900,6 +900,8 @@ Nous éxécutons après simplification le moteur d'inférence avec pour entrée 
 Nous avons, pour ce projet, décrit le fonctionnement d'un système expert simple sous forme d'algorithme et implémenté celui-ci en langage C.
 Nous avons aussi pu étendre ce système expert à l'ensemble de l'algèbre booléen et le munir d'un langage dédié et d'une interface interactive.
 
-L'implémentation de base ainsi que son extension ont étés capables de prouver des théorèmes simples dans l'algèbre booléen.
+L'implémentation de base ainsi que son extension sont capables de prouver des théorèmes simples dans l'algèbre booléen, comme celui présenté en exemple.
+
+Ce modèle de système expert reste pour autant limité, car il ne supporte que des symboles de type booléen.
 
 \end{document}
