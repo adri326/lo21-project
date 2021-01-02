@@ -801,10 +801,10 @@ $D$ n'étant pas présents dans les 5 autres cas, notre théorème est vérifié
 
 Comme nous l'avons vu précédemment, nous pouvons facilement introduire le symbole $\lor$ (\og ou \fg) et éxecuter différentes transformations pour arriver à un ensemble de règles ne contenant que les opérateurs $\land$ et $\Rightarrow$.
 
-La \href{https://github.com/adri326/lo21-project}{version de ce projet publiée en ligne} contient une telle extension, introduisant \href{https://github.com/adri326/lo21-project/blob/ext/ext/grammar.ebnf}{un langage} dédié à celle-ci.
+L'implémentation de ce projet contient une telle extension (que vous pourrez trouver dans le dossier \textbf{ext}), introduisant \href{https://github.com/adri326/lo21-project/blob/main/ext/grammar.ebnf}{un langage} dédié à celle-ci.
 Cette extension introduit aussi l'opérateur $\neg$ (\og non \fg) et l'opérateur $\Leftrightarrow$ (\og ssi \fg).
 
-Nous pouvons appliquer les opérations de simplification suivantes pour passer du langage utilisant les opérateurs \((\lor, \land, \neg, \Rightarrow, \Leftrightarrow)\) au langage utilisant uniquement les opérateurs \((\land, \neg, \Rightarrow)\):
+Nous pouvons appliquer les opérations de simplification suivantes pour passer de ce langage utilisant les opérateurs \((\lor, \land, \neg, \Rightarrow, \Leftrightarrow)\) au langage utilisant uniquement les opérateurs \((\land, \neg, \Rightarrow)\):
 
 \begin{itemize}
   \item $\neg(A \land B) \; \mapsto \; \neg{A} \lor \neg{B} \enspace [A, B]$
