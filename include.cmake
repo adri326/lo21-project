@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 option(FAITHFUL_IMPLEMENTATION "ON to enable faithful implementation (slower, default), OFF to disable it (faster)" ON)
-option(PRINT_ERRORS "ON to print out errors (default), OFF for silent mode" ON)
+option(PRINT_ERRORS "ON to print out errors (does not work with table), OFF for silent mode (default)" OFF)
 
 if(WIN32)
   set(DEFAULT_NO_COLOR OFF)

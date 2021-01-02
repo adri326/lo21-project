@@ -9,8 +9,8 @@ if(GENERATE_OPPOSITE)
   add_compile_definitions(GENERATE_OPPOSITE)
 endif()
 
-if(GENERATE_ERROR)
-  add_compile_definitions(GENERATE_ERROR)
+if(GENERATE_ERRORS)
+  add_compile_definitions(GENERATE_ERRORS)
 endif()
 
 include(../include.cmake)

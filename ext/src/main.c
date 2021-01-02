@@ -32,11 +32,11 @@ int main(int argc, char* argv[]) {
     VEC(expr_ast)* ast = ast_expand_eqv(ast_parse(raw));
     free(raw);
 
-    #ifdef GENERATE_ERROR
+    #ifdef GENERATE_ERRORS
         VEC(expr_flat)* flat = generate_errors(flatten_expressions(ast));
-    #else // GENERATE_ERROR
+    #else // GENERATE_ERRORS
         VEC(expr_flat)* flat = flatten_expressions(ast);
-    #endif // GENERATE_ERROR
+    #endif // GENERATE_ERRORS
 
     knowledgebase_t* kb = simplify_expressions(flat);
     print_kb(kb);
