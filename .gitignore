@@ -16,3 +16,5 @@ output/
 *.aux
 *.log
 *.out
+*.toc
+*.loa

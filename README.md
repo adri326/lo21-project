@@ -1,6 +1,7 @@
 # lo21-project
 
-Project for the LO21 class "Algorithmics and programming II"
+Project for the LO21 class "Algorithmics and programming II".
+You can have a read at a transcript of the subject here (FR): https://github.com/Juknum/Systeme-Expert/blob/master/README.md
 
 ## Installation
 

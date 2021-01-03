@@ -1,15 +1,15 @@
 {Proof that (A || B) && C => (A && C) || B, using <=>}
-{Run `forall ["A" "B" "C"] "Z"` to see the inference engine validate the proof!}
+{Run `forall ["A" "B" "C"] "res"` to see the inference engine validate the proof!}
 
-{Encode both halves as 'X' and 'Y':}
+{Encode both halves as 'D' and 'E':}
 
-    {(A || B) && C <=> X:}
-        ("A" || "B") && "C" <=> "X";
+    {(A || B) && C <=> D:}
+        ("A" || "B") && "C" <=> "D";
 
-    {(A && C) || B <=> Y:}
-        ("A" && "C") || "B" <=> "Y";
+    {(A && C) || B <=> E:}
+        ("A" && "C") || "B" <=> "E";
 
-{Coding in X => Y:}
+{Coding in D => E:}
 
-    {(X && Y) || !X <=> Z:}
-        ("X" && "Y") || !("X") <=> "Z";
+    {(D && E) || !D <=> res:}
+        ("D" && "E") || !("D") <=> "res";

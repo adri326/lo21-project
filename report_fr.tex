@@ -56,7 +56,7 @@
 
 \renewcommand{\arraystretch}{1.5}
 
-\title{Projet LO21: Rapport final}
+\title{Projet LO21: Rapport final \\ \large \og Système Expert \fg}
 \author{Adrien Burgun}
 \date{Automne 2020}
 \graphicspath{{report/}}
@@ -83,11 +83,14 @@
     \item [Un moteur d'inférence,] qui, à partir de la base de connaissance et la base de faits, déduit quels autres symboles sont aussi vrais et les ajoute à la base de faits.
   \end{description}
 
-  Nous définirons d'abords le type \textit{\og Règle \fg}, constituant la base de connaissance. \\
-  Nous définirons ensuite le type \textit{\og BC \fg} (\underline{B}ase de \underline{C}onnaissance). \\
-  Nous décrirons enfin le moteur d'inférence comme implémenté dans ce projet, avec différents exemples.
+  Nous définirons d'abords le type \textit{\og Règle \fg}, constituant les éléments de la base de connaissance, puis le type \textit{\og BC \fg} (\underline{B}ase de \underline{C}onnaissance), ainsi que les fonctions leur étant associés. \\
+  Nous décrirons ensuite le moteur d'inférence comme implémenté dans ce projet, avec différents exemples de l'éxecution de celui-ci. \\
+  Nous verrons enfin comment nous avons pu étendre ce moteur d'inférence à l'algèbre booléen.
+
 \end{abstract}
 
+\newpage
+\tableofcontents
 \newpage
 
 % 1
@@ -550,11 +553,13 @@ Voici l'algorithme permettant d'accéder à la règle se trouvant en tête; s'il
 \caption{TêteBase\label{TB}}
 \end{algorithm}
 
+\newpage
+
 \section{Moteur d'inférence}
 
 Le moteur d'inférence est un algorithme permettant de déduire à partir de la liste initiale des symboles (propositions) ayant la valeur \og Vrai \fg et de la base de connaissance (BC) la liste de tous les symboles étant vrais.
 
-L'algorithme éxecute un maximum de $n$ (la longueur de la base de connaissance) passages sur les règles, celles-cis prenant la forme suivante ($p \geq 0$ symboles $S_x$ dans la prémisse et le symbole $\Omega_k$ dans la conclusion):
+L'algorithme éxecute un maximum de $n$ (la longueur de la base de connaissance) passages sur les règles, celles-cis prenant la forme suivante ($p \geq 0$ symboles $S_x$ dans la prémisse et le symbole $\Omega_k$ dans la conclusion; le symbole $\land$ correspond à \og et \fg):
 
 \[BC \vdash (\bigwedge_{x=0}^{x < p} S_x) \Rightarrow \Omega_k\]
 
@@ -713,7 +718,7 @@ Le symbole $C$ ne doit être ajouté que si $A$ et $B$ sont vrais; dans les autr
 \subsection{Somme égale à 2}
 
 Ce test ajoute le symbole $D$ à la liste de sortie si 2 symboles parmis $A$, $B$ et $C$ sont présents ($A, B$ ou $A, C$ ou $B, C$).
-Ce test vise à vérifier le bon fonctionnement du \hyperref[MI]{moteur d'inférence}: plusieures règles peuvent avoir la même conclusion, permettant de simuler l'opérateur $\lor$.
+Ce test vise à vérifier le bon fonctionnement du \hyperref[MI]{moteur d'inférence}: plusieures règles peuvent avoir la même conclusion, permettant de simuler l'opérateur $\lor$ (correspondant à \og ou \fg).
 
 \begin{algorithm}
 \BeginKB(Test 2\label{T2}){
@@ -723,7 +728,7 @@ Ce test vise à vérifier le bon fonctionnement du \hyperref[MI]{moteur d'infér
 }
 \end{algorithm}
 
-Ces trois règles peuvent être réduites à $(A \land B) \lor (A \land C) \lor (B \land C) \Rightarrow D$ ($\lor$ correspond à \og ou \fg).
+Ces trois règles peuvent être réduites à $(A \land B) \lor (A \land C) \lor (B \land C) \Rightarrow D$.
 
 \begin{tabular}{|p{4cm}|p{6.5cm}|}
   \hline
@@ -804,15 +809,15 @@ Comme nous l'avons vu précédemment, nous pouvons facilement introduire le symb
 L'implémentation de ce projet contient une telle extension (que vous pourrez trouver dans le dossier \textbf{ext}), introduisant \href{https://github.com/adri326/lo21-project/blob/main/ext/grammar.ebnf}{un langage} dédié à celle-ci.
 Cette extension introduit aussi l'opérateur $\neg$ (\og non \fg) et l'opérateur $\Leftrightarrow$ (\og ssi \fg).
 
-Nous pouvons appliquer les opérations de simplification suivantes pour passer de ce langage utilisant les opérateurs \((\lor, \land, \neg, \Rightarrow, \Leftrightarrow)\) au langage utilisant uniquement les opérateurs \((\land, \neg, \Rightarrow)\):
+Nous pouvons appliquer les opérations de simplification suivantes pour passer de ce langage utilisant les opérateurs \((\lor, \land, \neg, \Rightarrow, \Leftrightarrow)\) au langage utilisant uniquement les opérateurs \((\land, \neg, \Rightarrow)\), en se basant sur la logique classique:
 
 \begin{itemize}
-  \item $\neg(A \land B) \; \mapsto \; \neg{A} \lor \neg{B} \enspace [A, B]$
-  \item $\neg(A \lor B) \; \mapsto \; \neg{A} \land \neg{B} \enspace [A, B]$
-  \item $A \lor B \Rightarrow C \; \mapsto \; (A \Rightarrow C), (B \Rightarrow C) \enspace [A, B, C]$
-  \item $A \Rightarrow C \land D \; \mapsto \; (A \Rightarrow C), (A \Rightarrow D) \enspace [A, C, D]$
-  \item $\neg \neg A \; \mapsto \; A$
-  \item $A \Leftrightarrow B \; \mapsto \; (A \Rightarrow B), (\neg A \Rightarrow \neg B)$
+  \item $\neg(A \land B) \; \mapsto \; \neg{A} \lor \neg{B} \quad [A, B]$
+  \item $\neg(A \lor B) \; \mapsto \; \neg{A} \land \neg{B} \quad [A, B]$
+  \item $A \lor B \Rightarrow C \; \mapsto \; (A \Rightarrow C), (B \Rightarrow C) \quad [A, B, C]$
+  \item $A \Rightarrow C \land D \; \mapsto \; (A \Rightarrow C), (A \Rightarrow D) \quad [A, C, D]$
+  \item $\neg \neg A \; \mapsto \; A \quad [A]$
+  \item $A \Leftrightarrow B \; \mapsto \; (A \Rightarrow B), (\neg A \Rightarrow \neg B) \quad [A, B]$
 \end{itemize}
 
 Une fois ces simplifications appliquées, nous obtenons un ensemble de règle que le \hyperref[MI]{moteur d'inférence} peut comprendre.
@@ -821,7 +826,7 @@ Une fois ces simplifications appliquées, nous obtenons un ensemble de règle qu
 
 L'implémentation de l'extension lit et analyse un fichier écrit dans le langage dédié et le transforme par distributivité du $\land$ en un ensemble de règles du format:
 
-\[BC* \vdash (\bigvee_{x=0}^{x < p}\bigwedge_{y=0}^{y < p'_x} S_{x,y}) \Rightarrow \bigwedge_{x=0}^{y < q} T_x\]
+\[BC^{*} \vdash (\bigvee_{x=0}^{x < p}\bigwedge_{y=0}^{y < p'_x} S_{x,y}) \Rightarrow \bigwedge_{x=0}^{y < q} T_x\]
 
 Tel que:
 
@@ -839,7 +844,7 @@ Tel que:
       \neg S \in \neg \textit{Symbole} & \text{Symbole inversé}
     \end{cases} \\
   \bigwedge_{x=0}^{y < q} T_x
-    &= T_0 \land T_1 \land ... \land T_q\-1 \\
+    &= T_0 \land T_1 \land ... \land T_{q-1} \\
   \forall x, T_x
     &= \begin{cases}
       S \in \textit{Symbole} & \text{Symbole non-inversé} \\
@@ -866,7 +871,7 @@ Similairement au \hyperref[T3]{Test 3}, nous pouvons exprimer la relation $(A \l
 }
 \end{algorithm}
 
-Cette base de donnée est encodée dans le langage de l'extension et lui est donnée en entrée.
+Cette base de donnée est encodée dans le langage de l'extension et lui est donnée en entrée, ce fichier est fourni avec ce projet, à l'adresse \href{https://github.com/adri326/lo21-project/blob/main/ext/test/test-3.kb}{\textbf{ext/test/test-3.kb}}.
 Nous éxécutons ensuite le moteur d'inférence avec pour entrée les permutations de $A/\neg A$, $B/\neg B$ et $C/\neg C$:
 
 \begin{tabular}{|p{4cm}|p{6.5cm}|}
@@ -893,7 +898,19 @@ Nous éxécutons ensuite le moteur d'inférence avec pour entrée les permutatio
   \hline
 \end{tabular}
 
+\newpage
+
+Voici le même résultat, géneré par le programme:
+
+\begin{center}
+  \makebox[\textwidth]{
+    \includegraphics[width=\textwidth]{report/test-3-screenshot}
+  }
+\end{center}
+
 \textbf{résultat} étant vrai dans tous les cas, le théorème $(A \lor B) \land C \Rightarrow (A \land C) \lor B$ est validé.
+
+\newpage
 
 \section{Conclusion}
 
@@ -901,7 +918,13 @@ Nous avons, pour ce projet, décrit le fonctionnement d'un système expert simpl
 Nous avons aussi pu étendre ce système expert à l'ensemble de l'algèbre booléen et le munir d'un langage dédié et d'une interface interactive.
 
 L'implémentation de base ainsi que son extension sont capables de prouver des théorèmes simples dans l'algèbre booléen, comme celui présenté en exemple.
+Le moteur d'inférence a le désavantage d'être à minima de classe $\mathcal{O}(n^2)$ par rapport au nombre de règle, car il est obligé de les traverser une par une; nous pouvons imaginer que sur une grande base de connaissance, celui-ci risque de prendre longtemps.
+Une optimisation possible serait d'indéxer les symboles au préalables et de ne s'y réferrer et les comparer que par leur indexe, ainsi que de supprimer les règles déjà atteintes lors du parcours de la base de connaissance.
 
-Ce modèle de système expert reste pour autant limité, car il ne supporte que des symboles de type booléen.
+Même si celui-ci peut être étendu, ce modèle de système expert reste limité, car il ne supporte que des symboles de type booléen.
+
+\newpage
+\RestyleAlgo{boxruled}
+\listofalgorithms
 
 \end{document}

@@ -517,7 +517,6 @@ VEC(expr_flat)* generate_errors(VEC(expr_flat)* expressions) {
         }
     }
 
-    ccl_symbol_vec_printf(symbols);
     for (size_t n = 0; n < ccl_symbol_vec_length(symbols); n++) {
         ccl_symbol symbol = *ccl_symbol_vec_get(symbols, n);
         symbol.negate = false;
