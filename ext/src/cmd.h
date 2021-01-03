@@ -122,4 +122,10 @@ void cmd_forall(command cmd, knowledgebase_t* kb);
 **/
 void cmd_table(command cmd, knowledgebase_t* kb);
 
+/** The "print" command, prints out the knowledgebase. **/
+void cmd_print(command cmd, knowledgebase_t* kb);
+
+/** The "help" command, prints out a help message and also lets you query the usage of another command. **/
+void cmd_help(command cmd, knowledgebase_t* kb);
+
 #endif // CMD_H

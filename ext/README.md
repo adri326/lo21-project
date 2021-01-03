@@ -100,8 +100,11 @@ Where `paramN` may be:
 The available commands are:
 
 - `eval <symbol(s)> [<symbol(s)> [...]]`, for each parameter, evaluates the knowledgebase on it
-- `forall <input_symbols> <output_symbol>`, takes each symbol and evaluates the knowledgebase on combinations of these symbols and their opposite (eg. `[A, B]`; `[!A, B]`; `[A, !B]`; `[!A, !B]`).
+- `forall <input_symbols> [<static_symbols>] <output_symbol>`, takes each symbol and evaluates the knowledgebase on combinations of these symbols and their opposite (eg. `[A, B]`; `[!A, B]`; `[A, !B]`; `[!A, !B]`).
 Returns true iff `output_symbol` is true in every case, returns `error` if an error occured in one of the cases
+- `table <input_symbols> [<static_symbols>] <output_symbol>`, has the same syntax as `forall`, but prints out a truth table instead
+- `print`, prints out the knowledgebase
+- `help`, prints a list of the available commands and detailed information on these
 
 ### Syntax highlight
 

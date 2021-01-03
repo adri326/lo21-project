@@ -106,6 +106,10 @@ void handle_command(command cmd, knowledgebase_t* kb) {
         cmd_forall(cmd, kb);
     } else if (strcmp(cmd.name, "table") == 0) {
         cmd_table(cmd, kb);
+    } else if (strcmp(cmd.name, "print") == 0) {
+        cmd_print(cmd, kb);
+    } else if (strcmp(cmd.name, "help") == 0 || *cmd.name == '?') {
+        cmd_help(cmd, kb);
     }
 }
 
@@ -367,4 +371,127 @@ void cmd_table(command cmd, knowledgebase_t* kb) {
         }
     }
     printf(GRAY("\u251b") "\n");
+}
+
+void cmd_print(command cmd, knowledgebase_t* kb) {
+    print_kb(kb);
+    printf("\n");
+}
+
+#define EVAL_DESC "#Eval:\n\
+Evaluates for each of the parameters the knowledgebase.\n\n\
+#Usage:\n\
+`eval \"A\"` - evaluates the knowledgebase with as input \"A\"\n\
+`eval [\"B\" \"C\"]` - evaluates the knowledgebase with as input \"B\" and \"C\"\n\
+`eval \"A\" [\"B\" \"C\"]` - evaluates the knowledgebase twice, once with \"A\" and once with both \"B\" and \"C\"\
+"
+
+#define FORALL_DESC "#Forall:\n\
+Asserts that a given, required symbol is true for any input combination.\n\n\
+#Format:\n\
+`forall <variables> [<static symbols>] <required symbol>`\n\n\
+`variables` is a list of symbols whose combinations will be checked through\n\
+`static symbols` is a list of symbols that will be set to the same value for each of the tests\n\
+`required symbol` is the symbol to look for for each of the tests\n\n\
+#Usage:\n\
+`forall [\"A\" \"B\" \"C\"] \"Z\"` - Executes every combination of `A/!A`, `B/!B` and `C/!C` and checks that `Z` is true for all of them.\n\n\
+See the different examples in the `ext/test/` directory to see these in action.\
+"
+
+#define TABLE_DESC "#Table:\n\
+Prints out a truth table with every input combination.\n\n\
+#Format:\n\
+`table <variables> [<static symbols>] <required symbol>`\n\n\
+The format is the same as the `forall` command, type `?forall` to have an explanation of these.\n\n\
+#Usage:\n\
+On `ext/test/test-4.kb`, running `table [\"A\" \"B\"] \"res\"` yields the following:\n\n\
+ ┌───────┬───────┲━━━━━━━┓\n\
+ │     #A# │     #B# ┃   #res# ┃\n\
+ ├───────┼───────╊━━━━━━━┫\n\
+ │  #true# │  #true# ┃  #true# ┃\n\
+ ├───────┼───────╊━━━━━━━┫\n\
+ │ false │  #true# ┃  #true# ┃\n\
+ ├───────┼───────╊━━━━━━━┫\n\
+ │  #true# │ false ┃  #true# ┃\n\
+ ├───────┼───────╊━━━━━━━┫\n\
+ │ false │ false ┃  #true# ┃\n\
+ └───────┴───────┺━━━━━━━┛\
+"
+
+#define PRINT_DESC "#Print:\nPrints out the knowledgebase."
+
+#define HELP_DESK "#Help:\n\
+The help command, prints a list of the available commands and gives you detailed information on these.\n\n\
+#Format:\n\
+`help [<command name>]`\n\n\
+Where `command name` is optional and can be any of the commands.\n\
+You may also type `?<command name>` to get help on that command.\n\n\
+#Usage:\n\
+`help` prints out a list of commands\n\
+`help \"forall\"` prints out detailed information on the `forall` command\n\
+`?forall` does the same thing as the previous command\
+"
+
+#define LIST_COMMANDS "#Command list:\n\
+- `eval`, evaluates the knowledgebase for each of the parameters\n\
+- `forall`, asserts that a required symbol is true for any input combination\n\
+- `table`, prints out a truth table with every input combination\n\
+- `print`, prints out the knowledgebase\n\
+- `help`, prints this list of the available commands and gives you detailed information on these.\n\n\
+To see detailed information on any of these, type `help \"command_name\"` or `?command_name`!\
+"
+
+void print_cmd_desc(const char* string) {
+    printf(GRAY("\u250f\u2509 "));
+    bool title = false;
+    bool code = false;
+    while (*string != 0) {
+        if (*string == '\n') {
+            title = false;
+            if (string[1] == '#') {
+                printf("\n" GRAY("\u2520 "));
+            } else {
+                printf("\n" GRAY("\u2503 "));
+            }
+        } else if (*string == '#') {
+            title = !title;
+        } else if (*string == '`') {
+            #ifdef NO_COLOR
+            printf("`");
+            #endif // NO_COLOR
+            code = !code;
+        } else {
+            if (title) {
+                printf(CYAN("%c"), *string);
+            } else if (code) {
+                printf(BLUE("%c"), *string);
+            } else {
+                printf("%c", *string);
+            }
+        }
+        string++;
+    }
+    printf("\n" GRAY("\u2579") "\n");
+}
+
+void cmd_help(command cmd, knowledgebase_t* kb) {
+    char* param;
+    if (parameter_vec_length(cmd.parameters) == 1 && parameter_vec_get(cmd.parameters, 0)->type == PARAM_SYMBOL) {
+        param = parameter_vec_get(cmd.parameters, 0)->value.param_symbol;
+    } else {
+        param = "";
+    }
+    if (strcmp(param, "eval") == 0 || strcmp(cmd.name, "?eval") == 0) {
+        print_cmd_desc(EVAL_DESC);
+    } else if (strcmp(param, "forall") == 0 || strcmp(cmd.name, "?forall") == 0) {
+        print_cmd_desc(FORALL_DESC);
+    } else if (strcmp(param, "table") == 0 || strcmp(cmd.name, "?table") == 0) {
+        print_cmd_desc(TABLE_DESC);
+    } else if (strcmp(param, "print") == 0 || strcmp(cmd.name, "?print") == 0) {
+        print_cmd_desc(PRINT_DESC);
+    } else if (strcmp(param, "help") == 0 || strcmp(cmd.name, "?help") == 0) {
+        print_cmd_desc(HELP_DESK);
+    } else {
+        print_cmd_desc(LIST_COMMANDS);
+    }
 }
