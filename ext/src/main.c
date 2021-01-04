@@ -31,6 +31,7 @@ int main(int argc, char* argv[]) {
     // printf("%s\n", raw);
     VEC(expr_ast)* ast = ast_expand_eqv(ast_parse(raw));
     free(raw);
+    fclose(input_file);
 
     #ifdef GENERATE_ERRORS
         VEC(expr_flat)* flat = generate_errors(flatten_expressions(ast));
