@@ -24,6 +24,8 @@ make
 
 The report (written in french) of this project can be found in `.tex` format at [report_fr.tex](./report_fr.tex) and its compiled version in `.pdf` format at [report_fr.pdf](./report_fr.pdf).
 
+The presentation slides are available [here (FR)](https://docs.google.com/presentation/d/14uA0y8mrEptq2UXIL1WiLnINxllMmEdR23VbAO0nL_Y/edit?usp=sharing).
+
 ## Notes on extensions
 
 By default, this project builds as a faithful implementation of what is described in the report.
